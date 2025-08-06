@@ -1,0 +1,40 @@
+<script type="text/javascript">
+  RED.nodes.registerType("BDC6_HS_Value_Limits", {
+    category: "BDC6",
+    color: "#E6E0F8",
+    defaults: {
+      name: { value: "" },
+      ihs_minimum: { value: 0 },
+      interval: { value: 0 },
+      cyclic: { value: false },
+      immediate: { value: false }
+    },
+    inputs: 1,
+    outputs: 0,
+    icon: "font-awesome/fa-car",
+    label: function() {
+      return this.name || "BDC6_HS_Value_Limits";
+    }
+  });
+</script>
+
+<script type="text/html" data-template-name="BDC6_HS_Value_Limits">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Node name">
+  </div>
+  <div class="form-row">
+    <label for="node-input-ihs_minimum">BDC6_IHS_Minimum (A)</label>
+    <input type="number" id="node-input-ihs_minimum" step="0.01">
+  </div>
+  <div class="form-row">
+    <label for="node-input-interval">Interval (ms)</label>
+    <input type="number" id="node-input-interval" min="0">
+  </div>
+  <div class="form-row">
+    <label><input type="checkbox" id="node-input-cyclic"> Cyclic</label>
+  </div>
+  <div class="form-row">
+    <label><input type="checkbox" id="node-input-immediate"> Immediate</label>
+  </div>
+</script>
