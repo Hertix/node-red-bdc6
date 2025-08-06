@@ -1,0 +1,27 @@
+[
+  {
+    "id": "bdc6-hs-value-limits",
+    "type": "BDC6_HS_Value_Limits",
+    "z": "flow1",
+    "name": "BDC6_Value_Limits",
+    "ihs_minimum": 100,
+    "interval": 100,
+    "cyclic": true,
+    "immediate": true,
+    "wires": []
+  },
+  {
+    "id": "inject1",
+    "type": "inject",
+    "z": "flow1",
+    "name": "Trigger",
+    "props": [],
+    "repeat": "",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payloadType": "date",
+    "wires": [["bdc6-hs-value-limits"]]
+  }
+]
