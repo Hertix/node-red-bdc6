@@ -1,0 +1,11 @@
+{
+  "name": "node-red-contrib-bdc6",
+  "version": "0.1.0",
+  "description": "BDC6 CAN nodes for Node-RED with shared memory integration",
+  "dependencies": {},
+  "node-red": {
+    "nodes": {
+      "BDC6_HS_Value_Limits": "./nodes/BDC6_HS_Value_Limits.js"
+    }
+  }
+}
