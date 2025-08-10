@@ -1,0 +1,37 @@
+[
+  {
+    "id": "inject1",
+    "type": "inject",
+    "name": "Set IHS_Minimum 100.0 A",
+    "props": [{"p":"payload"}],
+    "once": false,
+    "payload": "{\"BDC6_IHS_Minimum\": 100.0}",
+    "payloadType": "json",
+    "x": 220,
+    "y": 120,
+    "wires": [["node1"]]
+  },
+  {
+    "id": "node1",
+    "type": "BDC6_HS_Value_Limits",
+    "name": "HS_Value_Limits",
+    "BDC6_IHS_Minimum": "100.0",
+    "interval_ms": "10",
+    "cyclic": "true",
+    "immediate": "false",
+    "x": 470,
+    "y": 120,
+    "wires": [["debug1"]]
+  },
+  {
+    "id": "debug1",
+    "type": "debug",
+    "name": "SHM Payload",
+    "active": true,
+    "tosidebar": true,
+    "complete": "payload",
+    "x": 720,
+    "y": 100,
+    "wires": []
+  }
+]

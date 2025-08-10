@@ -1,0 +1,11 @@
+{
+  "name": "node-red-contrib-bdc6",
+  "version": "0.1.0",
+  "description": "Node-RED nodes for BDC6 CAN communication",
+  "keywords": ["node-red","CAN","BDC6"],
+  "node-red": {
+    "nodes": {
+      "BDC6_HS_Value_Limits": "nodes/BDC6_HS_Value_Limits.js"
+    }
+  }
+}
