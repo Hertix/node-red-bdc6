@@ -18,6 +18,7 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <grp.h>
+#include <signal.h>
 
 #pragma pack(push,1)
 typedef struct {
@@ -42,16 +43,12 @@ static const char *g_prefix    = "";         // optionaler Prefix vor dem SHM-Na
 static const char *g_shm_dir   = "/dev/shm"; // SHM-Verzeichnis
 static const char *g_shm_group = NULL;       // optional: chgrp auf diese Gruppe
 static int         g_log_debug = 0;
+static volatile sig_atomic_t g_stop = 0;
 
 // ---- Zeit-Helpers ----
 static inline uint64_t mono_ns(void){
     struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint64_t)ts.tv_sec*1000000000ull + (uint64_t)ts.tv_nsec;
-}
-static inline void sleep_ns(uint64_t ns){
-    struct timespec ts = { .tv_sec = (time_t)(ns/1000000000ull),
-                           .tv_nsec = (long)(ns%1000000000ull) };
-    clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, NULL);
 }
 static void dbg(const char* fmt, ...){
     if (!g_log_debug) return;
@@ -59,6 +56,11 @@ static void dbg(const char* fmt, ...){
     vfprintf(stderr, fmt, ap);
     fputc('\n', stderr);
     va_end(ap);
+}
+static inline void sleep_until_abs_ns(uint64_t abs){
+    struct timespec ts = { .tv_sec = (time_t)(abs/1000000000ull),
+                           .tv_nsec = (long)(abs%1000000000ull) };
+    clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 }
 
 // ---- SHM-Map mit harten Rechten (0660) + optional chgrp ----
@@ -83,6 +85,18 @@ static bool map_file_rw(const char* path, int* fd_out, void** mem_out, size_t sz
     if (mem == MAP_FAILED) { perror("mmap(shm)"); close(fd); return false; }
 
     *fd_out = fd; *mem_out = mem; return true;
+}
+
+// attempt to read a consistent snapshot from shared memory without changing ABI
+static inline void read_shm_consistent(volatile shm_msg_t* src, shm_msg_t* out){
+    // simple double-read: read twice until equal; very low cost at 1 kHz
+    shm_msg_t a, b;
+    do {
+        memcpy(&a, (const void*)src, sizeof a);
+        __sync_synchronize(); // compiler+CPU barrier
+        memcpy(&b, (const void*)src, sizeof b);
+    } while (memcmp(&a, &b, sizeof a) != 0);
+    *out = a;
 }
 
 static bool open_entry(entry_t* e){
@@ -124,14 +138,14 @@ static int open_can(const char* ifname){
 
 // ---- Merge: request -> state (RMW in einem Thread) ----
 static void apply_request(entry_t* e){
-    shm_msg_t r = *e->req;
+    shm_msg_t r; read_shm_consistent((volatile shm_msg_t*)e->req, &r);
     bool have_any =
         r.can_id || r.cyclic || r.interval_ms || r.immediate ||
         memcmp(r.data, (uint8_t[8]){0}, 8) != 0;
 
     if (!have_any) return;
 
-    shm_msg_t s = *e->state;
+    shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)e->state, &s);
 
     // payload: last-writer-wins (auch 0 erlaubt)
     memcpy(s.data, r.data, 8);
@@ -171,6 +185,17 @@ static void usage(const char* argv0){
         argv0);
 }
 
+static void on_sig(int sig){
+    (void)sig;
+    g_stop = 1;
+}
+
+static int reopen_can_bound(const char* ifname){
+    int s = open_can(ifname);
+    if (s >= 0) return s;
+    return -1;
+}
+
 int main(int argc, char** argv){
     // Argumente parsen (keine Legacy-Positionsargumente)
     for (int i=1; i<argc; ++i){
@@ -187,6 +212,12 @@ int main(int argc, char** argv){
         fprintf(stderr, "Unknown arg: %s\n", argv[i]); usage(argv[0]); return 2;
     }
 
+    // signals for clean shutdown
+    struct sigaction sa; memset(&sa, 0, sizeof sa);
+    sa.sa_handler = on_sig; sigemptyset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
     // SHMs mappen/anlegen (0660, ggf. chgrp)
     for (size_t i=0; i<N; ++i){
         if (!open_entry(&E[i])) return 1;
@@ -197,23 +228,31 @@ int main(int argc, char** argv){
     if (can < 0) { for (size_t i=0;i<N;i++) close_entry(&E[i]); return 1; }
 
     const uint64_t tick_ns = 1000000ull; // 1 ms
-    uint64_t last = mono_ns();
+    uint64_t next_tick = mono_ns() + tick_ns;
+    uint64_t last_reopen_try = 0;
 
     fprintf(stderr, "can_sender_v2 starting: if=%s, shm_dir=%s, prefix=%s, group=%s\n",
             g_ifname, g_shm_dir, g_prefix, g_shm_group?g_shm_group:"(none)");
 
-    while (1){
+    while (!g_stop){
         uint64_t now = mono_ns();
-        if (now - last < tick_ns){
-            sleep_ns(tick_ns - (now - last));
+        if ((int64_t)(next_tick - now) > 0){
+            sleep_until_abs_ns(next_tick);
             now = mono_ns();
         }
-        last = now;
+        // catch up if we fell behind
+        while (now > next_tick + 5*tick_ns) next_tick += tick_ns;
+        next_tick += tick_ns;
 
         for (size_t i=0; i<N; ++i){
             apply_request(&E[i]);
 
-            shm_msg_t s = *E[i].state;
+            shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+            // sanitize CAN id: only 29-bit space (flags allowed as-is)
+            s.can_id &= 0x1FFFFFFF;
+            if (g_log_debug && s.can_id == 0){
+                // fprintf(stderr, "dbg: %s has can_id=0 (skipping send)\n", E[i].shm_name);
+            }
 
             if (s.immediate){
                 struct can_frame f = {0};
@@ -221,7 +260,19 @@ int main(int argc, char** argv){
                 f.can_dlc = 8;
                 memcpy(f.data, s.data, 8);
                 ssize_t w = write(can, &f, sizeof f);
-                if (w < 0 && g_log_debug) perror("write(can, immediate)");
+                if (w < 0){
+                    int err = errno;
+                    if (g_log_debug) perror("write(can, immediate)");
+                    // try to recover on typical transient errors
+                    if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
+                        uint64_t now2 = mono_ns();
+                        if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
+                            close(can);
+                            can = reopen_can_bound(g_ifname);
+                            last_reopen_try = now2;
+                        }
+                    }
+                }
                 E[i].state->immediate = 0; // ack
             }
 
@@ -232,7 +283,18 @@ int main(int argc, char** argv){
                     f.can_dlc = 8;
                     memcpy(f.data, s.data, 8);
                     ssize_t w = write(can, &f, sizeof f);
-                    if (w < 0 && g_log_debug) perror("write(can, cyclic)");
+                    if (w < 0){
+                        int err = errno;
+                        if (g_log_debug) perror("write(can, cyclic)");
+                        if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
+                            uint64_t now2 = mono_ns();
+                            if (now2 - last_reopen_try > 2000000000ull) {
+                                close(can);
+                                can = reopen_can_bound(g_ifname);
+                                last_reopen_try = now2;
+                            }
+                        }
+                    }
                     E[i].next_send_ns = now + (uint64_t)s.interval_ms * 1000000ull;
                 }
             } else {
@@ -241,8 +303,7 @@ int main(int argc, char** argv){
         }
     }
 
-    // nicht erreicht
     for (size_t i=0;i<N;i++) close_entry(&E[i]);
-    close(can);
+    if (can >= 0) close(can);
     return 0;
 }
