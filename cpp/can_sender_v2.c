@@ -135,6 +135,27 @@ static int open_can(const char* ifname){
     if (bind(s, (struct sockaddr*)&addr, sizeof(addr)) < 0){ perror("bind CAN"); close(s); return -1; }
     return s;
 }
+// sketch: add after CAN open
+struct can_filter flt[] = {
+  { .can_id = 0x123, .can_mask = CAN_SFF_MASK }, // add all IDs you care about
+  // ...
+};
+setsockopt(can, SOL_CAN_RAW, CAN_RAW_FILTER, &flt, sizeof(flt));
+
+// RX loop snippet (inside your main while):
+struct can_frame rx;
+int n = read(can, &rx, sizeof(rx));
+if (n == sizeof(rx)) {
+    // write to /dev/shm/<prefix>SM_BDC6_... .rx
+    // struct proposal:
+    // typedef struct { uint8_t data[8]; uint32_t can_id; uint64_t ts_ns; uint8_t updated; } shm_rx_t;
+    shm_rx_t v = {0};
+    memcpy(v.data, rx.data, 8);
+    v.can_id = rx.can_id & 0x1FFFFFFF;
+    v.ts_ns  = mono_ns();
+    v.updated++; // cheap “new data” toggle
+    *rx_state_ptr = v;
+}
 
 // ---- Merge: request -> state (RMW in einem Thread) ----
 static void apply_request(entry_t* e){
