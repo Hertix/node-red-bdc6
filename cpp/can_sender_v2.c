@@ -254,24 +254,19 @@ int main(int argc, char** argv){
             g_ifname, g_shm_dir, g_prefix, g_shm_group?g_shm_group:"(none)");
 
     while (!g_stop){
+        const uint64_t poll_ns = 1000000ull;   // 1 ms
         uint64_t now = mono_ns();
-
-        // 1) Merge requests (≤1 ms reaction time for immediates)
-        for (size_t i=0; i<N; ++i){
+    
+        // 1) Merge requests first
+        for (size_t i=0; i<N; ++i) {
             apply_request(&E[i]);
         }
-
-        // We will sleep to the earliest absolute deadline; if nothing is due, poll again in 1 ms
-        uint64_t next_deadline = now + 1000000ull; // poll floor: 1 ms
-
-        // 2) Per-entry handling: immediate first, then cyclic with absolute deadlines
-            for (size_t i=0; i<N; ++i){
+    
+        // 2) Handle immediates
+        for (size_t i=0; i<N; ++i){
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
-
-            // sanitize CAN id: only 29-bit space (flags allowed as-is)
             s.can_id &= 0x1FFFFFFF;
-
-            // ---- Immediate one-shot ----
+    
             if (s.immediate){
                 struct can_frame f = {0};
                 f.can_id  = s.can_id;
@@ -283,7 +278,7 @@ int main(int argc, char** argv){
                     if (g_log_debug) perror("write(can, immediate)");
                     if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                         uint64_t now2 = mono_ns();
-                        if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
+                        if (now2 - last_reopen_try > 2000000000ull){
                             close(can);
                             can = reopen_can_bound(g_ifname);
                             last_reopen_try = now2;
@@ -292,51 +287,84 @@ int main(int argc, char** argv){
                 }
                 E[i].state->immediate = 0; // ack
             }
-
-            // ---- Cyclic sends: absolute, drift-free ----
+        }
+    
+        // 3) Determine the earliest cyclic deadline
+        uint64_t earliest_deadline = 0;  // 0 => none
+        for (size_t i=0; i<N; ++i){
+            shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
             if (s.cyclic && s.interval_ms){
                 const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
-
-                // First activation: preserve old behavior → send immediately once
-                if (E[i].next_send_ns == 0)
+                if (E[i].next_send_ns == 0){
+                    // preserve "send once immediately on enable"
                     E[i].next_send_ns = now;
-
-                // Catch up if we woke late; always advance from previous deadline
-                while (now >= E[i].next_send_ns){
+                }
+                if (earliest_deadline == 0 || E[i].next_send_ns < earliest_deadline)
+                    earliest_deadline = E[i].next_send_ns;
+            } else {
+                E[i].next_send_ns = 0;
+            }
+        }
+    
+        if (earliest_deadline == 0){
+            // No cyclic active → just poll in 1 ms
+            sleep_until_abs_ns(now + poll_ns);
+            continue;
+        }
+    
+        // 4) If the next send is farther than poll_ns away, sleep until (deadline - poll_ns),
+        //    re-apply requests/immediates, then final exact sleep to the deadline.
+        now = mono_ns();
+        if ((int64_t)(earliest_deadline - now) > (int64_t)poll_ns){
+            sleep_until_abs_ns(earliest_deadline - poll_ns);
+    
+            // quick pass to absorb late requests and immediates
+            for (size_t i=0; i<N; ++i) apply_request(&E[i]);
+            for (size_t i=0; i<N; ++i){
+                shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+                if (s.immediate){
                     struct can_frame f = {0};
-                    f.can_id  = s.can_id;
+                    f.can_id  = (s.can_id & 0x1FFFFFFF);
                     f.can_dlc = 8;
                     memcpy(f.data, s.data, 8);
-
+                    if (write(can, &f, sizeof f) < 0 && g_log_debug) perror("write(can, immediate)");
+                    E[i].state->immediate = 0;
+                }
+            }
+            now = mono_ns();
+        }
+    
+        // 5) Final precise sleep to the earliest deadline
+        sleep_until_abs_ns(earliest_deadline);
+        now = mono_ns();
+    
+        // 6) Send all entries whose deadlines have arrived, drift-free (increment from previous deadline)
+        for (size_t i=0; i<N; ++i){
+            shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+            if (s.cyclic && s.interval_ms){
+                const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
+                while (now >= E[i].next_send_ns){
+                    struct can_frame f = {0};
+                    f.can_id  = (s.can_id & 0x1FFFFFFF);
+                    f.can_dlc = 8;
+                    memcpy(f.data, s.data, 8);
                     ssize_t w = write(can, &f, sizeof f);
                     if (w < 0){
                         int err = errno;
                         if (g_log_debug) perror("write(can, cyclic)");
                         if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                             uint64_t now2 = mono_ns();
-                            if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
+                            if (now2 - last_reopen_try > 2000000000ull){
                                 close(can);
                                 can = reopen_can_bound(g_ifname);
                                 last_reopen_try = now2;
                             }
                         }
                     }
-
-                    // Drift-free: increment from previous deadline, not from 'now'
-                    E[i].next_send_ns += period;
+                    E[i].next_send_ns += period;   // advance from previous deadline (no bias)
                 }
-
-                // Track the earliest absolute deadline to sleep to
-                if (E[i].next_send_ns < next_deadline)
-                    next_deadline = E[i].next_send_ns;
-            } else {
-                // Disabled; re-init on next enable
-                E[i].next_send_ns = 0;
             }
         }
-
-        // 3) Sleep exactly until the earliest deadline (or ≤1 ms to poll req/immediates)
-        sleep_until_abs_ns(next_deadline);
     }
 
     for (size_t i=0;i<N;i++) close_entry(&E[i]);
