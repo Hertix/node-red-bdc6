@@ -298,28 +298,38 @@ int main(int argc, char** argv){
             }
 
             if (s.cyclic && s.interval_ms){
-                if (now >= E[i].next_send_ns){
+                const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
+
+                // First activation: preserve old behavior → send immediately once
+                if (E[i].next_send_ns == 0)
+                    E[i].next_send_ns = now;
+
+                // Catch up if we woke late; always advance from the previous deadline
+                while (now >= E[i].next_send_ns){
                     struct can_frame f = {0};
                     f.can_id  = s.can_id;
                     f.can_dlc = 8;
                     memcpy(f.data, s.data, 8);
+
                     ssize_t w = write(can, &f, sizeof f);
                     if (w < 0){
                         int err = errno;
                         if (g_log_debug) perror("write(can, cyclic)");
                         if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                             uint64_t now2 = mono_ns();
-                            if (now2 - last_reopen_try > 2000000000ull) {
+                            if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
                                 close(can);
                                 can = reopen_can_bound(g_ifname);
                                 last_reopen_try = now2;
                             }
                         }
                     }
-                    E[i].next_send_ns = now + (uint64_t)s.interval_ms * 1000000ull;
+                    // Drift-free: increment from previous deadline, not from 'now'
+                    E[i].next_send_ns += period;
                 }
             } else {
-                E[i].next_send_ns = now; // sofort bereit, wenn später aktiviert
+                // Mark disabled; next enable will re-init and (by default) send immediately once
+                E[i].next_send_ns = 0;
             }
         }
     }
