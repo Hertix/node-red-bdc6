@@ -58,8 +58,8 @@ static void dbg(const char* fmt, ...){
     va_end(ap);
 }
 static inline void sleep_until_abs_ns(uint64_t abs){
-    struct timespec ts = { .tv_sec = (time_t)(abs/1000000000ull),
-                           .tv_nsec = (long)(abs%1000000000ull) };
+    struct timespec ts = { .tv_sec  = (time_t)(abs / 1000000000ull),
+                           .tv_nsec = (long)(abs % 1000000000ull) };
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 }
 
@@ -248,8 +248,6 @@ int main(int argc, char** argv){
     int can = open_can(g_ifname);
     if (can < 0) { for (size_t i=0;i<N;i++) close_entry(&E[i]); return 1; }
 
-    const uint64_t tick_ns = 1000000ull; // 1 ms
-    uint64_t next_tick = mono_ns() + tick_ns;
     uint64_t last_reopen_try = 0;
 
     fprintf(stderr, "can_sender_v2 starting: if=%s, shm_dir=%s, prefix=%s, group=%s\n",
@@ -257,24 +255,23 @@ int main(int argc, char** argv){
 
     while (!g_stop){
         uint64_t now = mono_ns();
-        if ((int64_t)(next_tick - now) > 0){
-            sleep_until_abs_ns(next_tick);
-            now = mono_ns();
-        }
-        // catch up if we fell behind
-        while (now > next_tick + 5*tick_ns) next_tick += tick_ns;
-        next_tick += tick_ns;
 
+        // 1) Merge requests (≤1 ms reaction time for immediates)
         for (size_t i=0; i<N; ++i){
             apply_request(&E[i]);
+        }
 
+        // We will sleep to the earliest absolute deadline; if nothing is due, poll again in 1 ms
+        uint64_t next_deadline = now + 1000000ull; // poll floor: 1 ms
+
+        // 2) Per-entry handling: immediate first, then cyclic with absolute deadlines
+            for (size_t i=0; i<N; ++i){
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+
             // sanitize CAN id: only 29-bit space (flags allowed as-is)
             s.can_id &= 0x1FFFFFFF;
-            if (g_log_debug && s.can_id == 0){
-                // fprintf(stderr, "dbg: %s has can_id=0 (skipping send)\n", E[i].shm_name);
-            }
 
+            // ---- Immediate one-shot ----
             if (s.immediate){
                 struct can_frame f = {0};
                 f.can_id  = s.can_id;
@@ -284,7 +281,6 @@ int main(int argc, char** argv){
                 if (w < 0){
                     int err = errno;
                     if (g_log_debug) perror("write(can, immediate)");
-                    // try to recover on typical transient errors
                     if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                         uint64_t now2 = mono_ns();
                         if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
@@ -297,6 +293,7 @@ int main(int argc, char** argv){
                 E[i].state->immediate = 0; // ack
             }
 
+            // ---- Cyclic sends: absolute, drift-free ----
             if (s.cyclic && s.interval_ms){
                 const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
 
@@ -304,7 +301,7 @@ int main(int argc, char** argv){
                 if (E[i].next_send_ns == 0)
                     E[i].next_send_ns = now;
 
-                // Catch up if we woke late; always advance from the previous deadline
+                // Catch up if we woke late; always advance from previous deadline
                 while (now >= E[i].next_send_ns){
                     struct can_frame f = {0};
                     f.can_id  = s.can_id;
@@ -324,14 +321,22 @@ int main(int argc, char** argv){
                             }
                         }
                     }
+
                     // Drift-free: increment from previous deadline, not from 'now'
                     E[i].next_send_ns += period;
                 }
+
+                // Track the earliest absolute deadline to sleep to
+                if (E[i].next_send_ns < next_deadline)
+                    next_deadline = E[i].next_send_ns;
             } else {
-                // Mark disabled; next enable will re-init and (by default) send immediately once
+                // Disabled; re-init on next enable
                 E[i].next_send_ns = 0;
             }
         }
+
+        // 3) Sleep exactly until the earliest deadline (or ≤1 ms to poll req/immediates)
+        sleep_until_abs_ns(next_deadline);
     }
 
     for (size_t i=0;i<N;i++) close_entry(&E[i]);
