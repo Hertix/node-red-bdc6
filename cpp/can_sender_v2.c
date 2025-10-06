@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdarg.h>
@@ -98,6 +99,36 @@ static inline void read_shm_consistent(volatile shm_msg_t* src, shm_msg_t* out){
     } while (memcmp(&a, &b, sizeof a) != 0);
     *out = a;
 }
+// ---- Merge: request -> state (RMW in einem Thread) ----
+static void apply_request(entry_t* e){
+    shm_msg_t r; read_shm_consistent((volatile shm_msg_t*)e->req, &r);
+
+    bool have_any =
+        r.can_id || r.cyclic || r.interval_ms || r.immediate ||
+        memcmp(r.data, (uint8_t[8]){0}, 8) != 0;
+
+    if (!have_any) return;
+
+    shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)e->state, &s);
+
+    // payload: last-writer-wins (auch 0 erlaubt)
+    memcpy(s.data, r.data, 8);
+
+    // CAN-ID nur übernehmen, wenn != 0
+    if (r.can_id) s.can_id = r.can_id;
+
+    // Timing direkt übernehmen (auch 0 möglich)
+    s.cyclic      = r.cyclic;
+    s.interval_ms = r.interval_ms;
+
+    // One-shot: OR (mehrere Writer können triggern)
+    s.immediate  |= r.immediate;
+
+    *e->state = s;
+
+    // Request leeren (Level-Semantik)
+    memset(e->req, 0, sizeof(shm_msg_t));
+}
 
 static bool open_entry(entry_t* e){
     char st[512], rq[512];
@@ -135,56 +166,13 @@ static int open_can(const char* ifname){
     if (bind(s, (struct sockaddr*)&addr, sizeof(addr)) < 0){ perror("bind CAN"); close(s); return -1; }
     return s;
 }
-// sketch: add after CAN open
-struct can_filter flt[] = {
-  { .can_id = 0x123, .can_mask = CAN_SFF_MASK }, // add all IDs you care about
-  // ...
-};
-setsockopt(can, SOL_CAN_RAW, CAN_RAW_FILTER, &flt, sizeof(flt));
 
-// RX loop snippet (inside your main while):
-struct can_frame rx;
-int n = read(can, &rx, sizeof(rx));
-if (n == sizeof(rx)) {
-    // write to /dev/shm/<prefix>SM_BDC6_... .rx
-    // struct proposal:
-    // typedef struct { uint8_t data[8]; uint32_t can_id; uint64_t ts_ns; uint8_t updated; } shm_rx_t;
-    shm_rx_t v = {0};
-    memcpy(v.data, rx.data, 8);
-    v.can_id = rx.can_id & 0x1FFFFFFF;
-    v.ts_ns  = mono_ns();
-    v.updated++; // cheap “new data” toggle
-    *rx_state_ptr = v;
-}
+static void on_sig(int sig){ (void)sig; g_stop = 1; }
 
-// ---- Merge: request -> state (RMW in einem Thread) ----
-static void apply_request(entry_t* e){
-    shm_msg_t r; read_shm_consistent((volatile shm_msg_t*)e->req, &r);
-    bool have_any =
-        r.can_id || r.cyclic || r.interval_ms || r.immediate ||
-        memcmp(r.data, (uint8_t[8]){0}, 8) != 0;
-
-    if (!have_any) return;
-
-    shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)e->state, &s);
-
-    // payload: last-writer-wins (auch 0 erlaubt)
-    memcpy(s.data, r.data, 8);
-
-    // CAN-ID nur übernehmen, wenn != 0
-    if (r.can_id) s.can_id = r.can_id;
-
-    // Timing direkt übernehmen (auch 0 möglich)
-    s.cyclic      = r.cyclic;
-    s.interval_ms = r.interval_ms;
-
-    // One-shot: OR (mehrere Writer können triggern)
-    s.immediate  |= r.immediate;
-
-    *e->state = s;
-
-    // Request leeren (Level-Semantik)
-    memset(e->req, 0, sizeof(shm_msg_t));
+static int reopen_can_bound(const char* ifname){
+    int s = open_can(ifname);
+    if (s >= 0) return s;
+    return -1;
 }
 
 // ---- Messages-Tabelle ----
@@ -204,17 +192,6 @@ static void usage(const char* argv0){
     fprintf(stderr,
         "Usage: %s [--ifname canX] [--prefix STR] [--shm-dir /dev/shm] [--shm-group GROUP] [--log debug|info]\n",
         argv0);
-}
-
-static void on_sig(int sig){
-    (void)sig;
-    g_stop = 1;
-}
-
-static int reopen_can_bound(const char* ifname){
-    int s = open_can(ifname);
-    if (s >= 0) return s;
-    return -1;
 }
 
 int main(int argc, char** argv){
@@ -256,17 +233,14 @@ int main(int argc, char** argv){
     while (!g_stop){
         const uint64_t poll_ns = 1000000ull;   // 1 ms
         uint64_t now = mono_ns();
-    
+
         // 1) Merge requests first
-        for (size_t i=0; i<N; ++i) {
-            apply_request(&E[i]);
-        }
-    
+        for (size_t i=0; i<N; ++i) apply_request(&E[i]);
+
         // 2) Handle immediates
         for (size_t i=0; i<N; ++i){
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
             s.can_id &= 0x1FFFFFFF;
-    
             if (s.immediate){
                 struct can_frame f = {0};
                 f.can_id  = s.can_id;
@@ -288,13 +262,12 @@ int main(int argc, char** argv){
                 E[i].state->immediate = 0; // ack
             }
         }
-    
+
         // 3) Determine the earliest cyclic deadline
         uint64_t earliest_deadline = 0;  // 0 => none
         for (size_t i=0; i<N; ++i){
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
             if (s.cyclic && s.interval_ms){
-                const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
                 if (E[i].next_send_ns == 0){
                     // preserve "send once immediately on enable"
                     E[i].next_send_ns = now;
@@ -305,19 +278,19 @@ int main(int argc, char** argv){
                 E[i].next_send_ns = 0;
             }
         }
-    
+
         if (earliest_deadline == 0){
             // No cyclic active → just poll in 1 ms
             sleep_until_abs_ns(now + poll_ns);
             continue;
         }
-    
+
         // 4) If the next send is farther than poll_ns away, sleep until (deadline - poll_ns),
         //    re-apply requests/immediates, then final exact sleep to the deadline.
         now = mono_ns();
         if ((int64_t)(earliest_deadline - now) > (int64_t)poll_ns){
             sleep_until_abs_ns(earliest_deadline - poll_ns);
-    
+
             // quick pass to absorb late requests and immediates
             for (size_t i=0; i<N; ++i) apply_request(&E[i]);
             for (size_t i=0; i<N; ++i){
@@ -333,11 +306,11 @@ int main(int argc, char** argv){
             }
             now = mono_ns();
         }
-    
+
         // 5) Final precise sleep to the earliest deadline
         sleep_until_abs_ns(earliest_deadline);
         now = mono_ns();
-    
+
         // 6) Send all entries whose deadlines have arrived, drift-free (increment from previous deadline)
         for (size_t i=0; i<N; ++i){
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
