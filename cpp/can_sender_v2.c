@@ -64,20 +64,8 @@ static inline void sleep_until_abs_ns(uint64_t abs){
                            .tv_nsec = (long)(abs % 1000000000ull) };
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 }
+
 //----- Tiny Helpers -----------------------------------------
-static gid_t resolve_canbus_gid() {
-    struct group *gr = getgrnam("canbus");
-    return gr ? gr->gr_gid : (gid_t)-1;
-}
-
-static void ensure_perms_group_rw(int fd, gid_t g) {
-    if (g != (gid_t)-1) {
-        // keep owner, set only group; ignore errors but try
-        fchown(fd, (uid_t)-1, g);
-    }
-    fchmod(fd, 0664);
-}
-
 static gid_t resolve_gid_by_name(const char* name) {
     if (!name || !*name) return (gid_t)-1;
     struct group *gr = getgrnam(name);
@@ -90,17 +78,6 @@ static void ensure_perms_group_rw(int fd, gid_t g) {
         (void)fchown(fd, (uid_t)-1, g);
     }
     (void)fchmod(fd, 0664);  // rw-rw-r--
-}
-
-static int open_with_perms(const char* path, bool create, gid_t canbus_gid) {
-    // O_RDWR so both read/modify work; O_CREAT only when asked
-    int flags = O_RDWR;
-    if (create) flags |= O_CREAT;
-    int fd = open(path, flags, 0664);
-    if (fd >= 0) {
-        ensure_perms_group_rw(fd, canbus_gid);
-    }
-    return fd;
 }
 
 // Create/open + mmap a file with enforced perms/ownership (0664, group=g_shm_group).
