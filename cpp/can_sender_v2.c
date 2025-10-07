@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <errno.h>
 #include <linux/can.h>
@@ -40,9 +41,9 @@ typedef struct {
 } entry_t;
 
 static const char *g_ifname    = "can0";
-static const char *g_prefix    = "";         // optionaler Prefix vor dem SHM-Namen
-static const char *g_shm_dir   = "/dev/shm"; // SHM-Verzeichnis
-static const char *g_shm_group = NULL;       // optional: chgrp auf diese Gruppe
+static const char *g_prefix    = "";         // optional prefix in filenames (empty = none)
+static const char *g_shm_dir   = "/dev/shm"; // SHM directory
+static const char *g_shm_group = "canbus";   // default group for SHM files
 static int         g_log_debug = 0;
 static volatile sig_atomic_t g_stop = 0;
 
@@ -63,29 +64,71 @@ static inline void sleep_until_abs_ns(uint64_t abs){
                            .tv_nsec = (long)(abs % 1000000000ull) };
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 }
+//----- Tiny Helpers -----------------------------------------
+static gid_t resolve_canbus_gid() {
+    struct group *gr = getgrnam("canbus");
+    return gr ? gr->gr_gid : (gid_t)-1;
+}
 
-// ---- SHM-Map mit harten Rechten (0660) + optional chgrp ----
+static void ensure_perms_group_rw(int fd, gid_t g) {
+    if (g != (gid_t)-1) {
+        // keep owner, set only group; ignore errors but try
+        fchown(fd, (uid_t)-1, g);
+    }
+    fchmod(fd, 0664);
+}
+
+static gid_t resolve_gid_by_name(const char* name) {
+    if (!name || !*name) return (gid_t)-1;
+    struct group *gr = getgrnam(name);
+    return gr ? gr->gr_gid : (gid_t)-1;
+}
+
+static void ensure_perms_group_rw(int fd, gid_t g) {
+    if (g != (gid_t)-1) {
+        // keep owner, set only group; ignore errors but try
+        (void)fchown(fd, (uid_t)-1, g);
+    }
+    (void)fchmod(fd, 0664);  // rw-rw-r--
+}
+
+static int open_with_perms(const char* path, bool create, gid_t canbus_gid) {
+    // O_RDWR so both read/modify work; O_CREAT only when asked
+    int flags = O_RDWR;
+    if (create) flags |= O_CREAT;
+    int fd = open(path, flags, 0664);
+    if (fd >= 0) {
+        ensure_perms_group_rw(fd, canbus_gid);
+    }
+    return fd;
+}
+
+// Create/open + mmap a file with enforced perms/ownership (0664, group=g_shm_group).
+// Safe to call repeatedly; will correct perms on existing files too.
 static bool map_file_rw(const char* path, int* fd_out, void** mem_out, size_t sz){
-    mode_t old = umask(0007); // sorgt für 0660 bei O_CREAT|0666
-    int fd = open(path, O_RDWR | O_CREAT, 0666);
+    // Use group-friendly umask; we still explicitly set perms right after open.
+    mode_t old_um = umask(0002);
+    int fd = open(path, O_RDWR | O_CREAT, 0664);
     int open_err = errno;
-    umask(old);
-    if (fd < 0) { errno=open_err; perror("open(shm)"); return false; }
+    umask(old_um);
+    if (fd < 0) { errno = open_err; perror("open(shm)"); return false; }
 
-    if (ftruncate(fd, sz) < 0) { perror("ftruncate(shm)"); close(fd); return false; }
-
-    // Rechte absichern, unabhängig von Dienst-UMask
-    if (fchmod(fd, 0660) < 0) perror("fchmod(shm 0660)");
-
-    if (g_shm_group && *g_shm_group){
-        struct group *gr = getgrnam(g_shm_group);
-        if (gr && fchown(fd, (uid_t)-1, gr->gr_gid) < 0) perror("fchown(shm group)");
+    // If file smaller than sz, extend; if larger, keep size (backward compat)
+    struct stat st;
+    if (fstat(fd, &st) == 0 && (size_t)st.st_size < sz) {
+        if (ftruncate(fd, sz) < 0) { perror("ftruncate(shm)"); close(fd); return false; }
     }
 
-    void* mem = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    // Enforce group + 0664 every start (works even if file pre-existed)
+    gid_t want_gid = resolve_gid_by_name(g_shm_group);
+    ensure_perms_group_rw(fd, want_gid);
+
+    void* mem = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mem == MAP_FAILED) { perror("mmap(shm)"); close(fd); return false; }
 
-    *fd_out = fd; *mem_out = mem; return true;
+    *fd_out = fd;
+    *mem_out = mem;
+    return true;
 }
 
 // attempt to read a consistent snapshot from shared memory without changing ABI
@@ -196,6 +239,7 @@ static void usage(const char* argv0){
 
 int main(int argc, char** argv){
     // Argumente parsen (keine Legacy-Positionsargumente)
+    umask(0002);
     for (int i=1; i<argc; ++i){
         if (!strcmp(argv[i],"--ifname") && i+1<argc)    { g_ifname = argv[++i]; continue; }
         if (!strcmp(argv[i],"--prefix") && i+1<argc)    { g_prefix = argv[++i]; continue; }
