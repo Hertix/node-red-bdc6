@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdarg.h>
@@ -9,6 +10,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <errno.h>
 #include <linux/can.h>
@@ -39,9 +41,9 @@ typedef struct {
 } entry_t;
 
 static const char *g_ifname    = "can0";
-static const char *g_prefix    = "";         // optionaler Prefix vor dem SHM-Namen
-static const char *g_shm_dir   = "/dev/shm"; // SHM-Verzeichnis
-static const char *g_shm_group = NULL;       // optional: chgrp auf diese Gruppe
+static const char *g_prefix    = "";         // optional prefix in filenames (empty = none)
+static const char *g_shm_dir   = "/dev/shm"; // SHM directory
+static const char *g_shm_group = "canbus";   // default group for SHM files
 static int         g_log_debug = 0;
 static volatile sig_atomic_t g_stop = 0;
 
@@ -58,33 +60,52 @@ static void dbg(const char* fmt, ...){
     va_end(ap);
 }
 static inline void sleep_until_abs_ns(uint64_t abs){
-    struct timespec ts = { .tv_sec = (time_t)(abs/1000000000ull),
-                           .tv_nsec = (long)(abs%1000000000ull) };
+    struct timespec ts = { .tv_sec  = (time_t)(abs / 1000000000ull),
+                           .tv_nsec = (long)(abs % 1000000000ull) };
     clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, NULL);
 }
 
-// ---- SHM-Map mit harten Rechten (0660) + optional chgrp ----
+//----- Tiny Helpers -----------------------------------------
+static gid_t resolve_gid_by_name(const char* name) {
+    if (!name || !*name) return (gid_t)-1;
+    struct group *gr = getgrnam(name);
+    return gr ? gr->gr_gid : (gid_t)-1;
+}
+
+static void ensure_perms_group_rw(int fd, gid_t g) {
+    if (g != (gid_t)-1) {
+        // keep owner, set only group; ignore errors but try
+        (void)fchown(fd, (uid_t)-1, g);
+    }
+    (void)fchmod(fd, 0664);  // rw-rw-r--
+}
+
+// Create/open + mmap a file with enforced perms/ownership (0664, group=g_shm_group).
+// Safe to call repeatedly; will correct perms on existing files too.
 static bool map_file_rw(const char* path, int* fd_out, void** mem_out, size_t sz){
-    mode_t old = umask(0007); // sorgt für 0660 bei O_CREAT|0666
-    int fd = open(path, O_RDWR | O_CREAT, 0666);
+    // Use group-friendly umask; we still explicitly set perms right after open.
+    mode_t old_um = umask(0002);
+    int fd = open(path, O_RDWR | O_CREAT, 0664);
     int open_err = errno;
-    umask(old);
-    if (fd < 0) { errno=open_err; perror("open(shm)"); return false; }
+    umask(old_um);
+    if (fd < 0) { errno = open_err; perror("open(shm)"); return false; }
 
-    if (ftruncate(fd, sz) < 0) { perror("ftruncate(shm)"); close(fd); return false; }
-
-    // Rechte absichern, unabhängig von Dienst-UMask
-    if (fchmod(fd, 0660) < 0) perror("fchmod(shm 0660)");
-
-    if (g_shm_group && *g_shm_group){
-        struct group *gr = getgrnam(g_shm_group);
-        if (gr && fchown(fd, (uid_t)-1, gr->gr_gid) < 0) perror("fchown(shm group)");
+    // If file smaller than sz, extend; if larger, keep size (backward compat)
+    struct stat st;
+    if (fstat(fd, &st) == 0 && (size_t)st.st_size < sz) {
+        if (ftruncate(fd, sz) < 0) { perror("ftruncate(shm)"); close(fd); return false; }
     }
 
-    void* mem = mmap(NULL, sz, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    // Enforce group + 0664 every start (works even if file pre-existed)
+    gid_t want_gid = resolve_gid_by_name(g_shm_group);
+    ensure_perms_group_rw(fd, want_gid);
+
+    void* mem = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (mem == MAP_FAILED) { perror("mmap(shm)"); close(fd); return false; }
 
-    *fd_out = fd; *mem_out = mem; return true;
+    *fd_out = fd;
+    *mem_out = mem;
+    return true;
 }
 
 // attempt to read a consistent snapshot from shared memory without changing ABI
@@ -97,6 +118,36 @@ static inline void read_shm_consistent(volatile shm_msg_t* src, shm_msg_t* out){
         memcpy(&b, (const void*)src, sizeof b);
     } while (memcmp(&a, &b, sizeof a) != 0);
     *out = a;
+}
+// ---- Merge: request -> state (RMW in einem Thread) ----
+static void apply_request(entry_t* e){
+    shm_msg_t r; read_shm_consistent((volatile shm_msg_t*)e->req, &r);
+
+    bool have_any =
+        r.can_id || r.cyclic || r.interval_ms || r.immediate ||
+        memcmp(r.data, (uint8_t[8]){0}, 8) != 0;
+
+    if (!have_any) return;
+
+    shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)e->state, &s);
+
+    // payload: last-writer-wins (auch 0 erlaubt)
+    memcpy(s.data, r.data, 8);
+
+    // CAN-ID nur übernehmen, wenn != 0
+    if (r.can_id) s.can_id = r.can_id;
+
+    // Timing direkt übernehmen (auch 0 möglich)
+    s.cyclic      = r.cyclic;
+    s.interval_ms = r.interval_ms;
+
+    // One-shot: OR (mehrere Writer können triggern)
+    s.immediate  |= r.immediate;
+
+    *e->state = s;
+
+    // Request leeren (Level-Semantik)
+    memset(e->req, 0, sizeof(shm_msg_t));
 }
 
 static bool open_entry(entry_t* e){
@@ -135,56 +186,13 @@ static int open_can(const char* ifname){
     if (bind(s, (struct sockaddr*)&addr, sizeof(addr)) < 0){ perror("bind CAN"); close(s); return -1; }
     return s;
 }
-// sketch: add after CAN open
-struct can_filter flt[] = {
-  { .can_id = 0x123, .can_mask = CAN_SFF_MASK }, // add all IDs you care about
-  // ...
-};
-setsockopt(can, SOL_CAN_RAW, CAN_RAW_FILTER, &flt, sizeof(flt));
 
-// RX loop snippet (inside your main while):
-struct can_frame rx;
-int n = read(can, &rx, sizeof(rx));
-if (n == sizeof(rx)) {
-    // write to /dev/shm/<prefix>SM_BDC6_... .rx
-    // struct proposal:
-    // typedef struct { uint8_t data[8]; uint32_t can_id; uint64_t ts_ns; uint8_t updated; } shm_rx_t;
-    shm_rx_t v = {0};
-    memcpy(v.data, rx.data, 8);
-    v.can_id = rx.can_id & 0x1FFFFFFF;
-    v.ts_ns  = mono_ns();
-    v.updated++; // cheap “new data” toggle
-    *rx_state_ptr = v;
-}
+static void on_sig(int sig){ (void)sig; g_stop = 1; }
 
-// ---- Merge: request -> state (RMW in einem Thread) ----
-static void apply_request(entry_t* e){
-    shm_msg_t r; read_shm_consistent((volatile shm_msg_t*)e->req, &r);
-    bool have_any =
-        r.can_id || r.cyclic || r.interval_ms || r.immediate ||
-        memcmp(r.data, (uint8_t[8]){0}, 8) != 0;
-
-    if (!have_any) return;
-
-    shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)e->state, &s);
-
-    // payload: last-writer-wins (auch 0 erlaubt)
-    memcpy(s.data, r.data, 8);
-
-    // CAN-ID nur übernehmen, wenn != 0
-    if (r.can_id) s.can_id = r.can_id;
-
-    // Timing direkt übernehmen (auch 0 möglich)
-    s.cyclic      = r.cyclic;
-    s.interval_ms = r.interval_ms;
-
-    // One-shot: OR (mehrere Writer können triggern)
-    s.immediate  |= r.immediate;
-
-    *e->state = s;
-
-    // Request leeren (Level-Semantik)
-    memset(e->req, 0, sizeof(shm_msg_t));
+static int reopen_can_bound(const char* ifname){
+    int s = open_can(ifname);
+    if (s >= 0) return s;
+    return -1;
 }
 
 // ---- Messages-Tabelle ----
@@ -206,19 +214,9 @@ static void usage(const char* argv0){
         argv0);
 }
 
-static void on_sig(int sig){
-    (void)sig;
-    g_stop = 1;
-}
-
-static int reopen_can_bound(const char* ifname){
-    int s = open_can(ifname);
-    if (s >= 0) return s;
-    return -1;
-}
-
 int main(int argc, char** argv){
     // Argumente parsen (keine Legacy-Positionsargumente)
+    umask(0002);
     for (int i=1; i<argc; ++i){
         if (!strcmp(argv[i],"--ifname") && i+1<argc)    { g_ifname = argv[++i]; continue; }
         if (!strcmp(argv[i],"--prefix") && i+1<argc)    { g_prefix = argv[++i]; continue; }
@@ -248,33 +246,22 @@ int main(int argc, char** argv){
     int can = open_can(g_ifname);
     if (can < 0) { for (size_t i=0;i<N;i++) close_entry(&E[i]); return 1; }
 
-    const uint64_t tick_ns = 1000000ull; // 1 ms
-    uint64_t next_tick = mono_ns() + tick_ns;
     uint64_t last_reopen_try = 0;
 
     fprintf(stderr, "can_sender_v2 starting: if=%s, shm_dir=%s, prefix=%s, group=%s\n",
             g_ifname, g_shm_dir, g_prefix, g_shm_group?g_shm_group:"(none)");
 
     while (!g_stop){
+        const uint64_t poll_ns = 1000000ull;   // 1 ms
         uint64_t now = mono_ns();
-        if ((int64_t)(next_tick - now) > 0){
-            sleep_until_abs_ns(next_tick);
-            now = mono_ns();
-        }
-        // catch up if we fell behind
-        while (now > next_tick + 5*tick_ns) next_tick += tick_ns;
-        next_tick += tick_ns;
 
+        // 1) Merge requests first
+        for (size_t i=0; i<N; ++i) apply_request(&E[i]);
+
+        // 2) Handle immediates
         for (size_t i=0; i<N; ++i){
-            apply_request(&E[i]);
-
             shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
-            // sanitize CAN id: only 29-bit space (flags allowed as-is)
             s.can_id &= 0x1FFFFFFF;
-            if (g_log_debug && s.can_id == 0){
-                // fprintf(stderr, "dbg: %s has can_id=0 (skipping send)\n", E[i].shm_name);
-            }
-
             if (s.immediate){
                 struct can_frame f = {0};
                 f.can_id  = s.can_id;
@@ -284,10 +271,9 @@ int main(int argc, char** argv){
                 if (w < 0){
                     int err = errno;
                     if (g_log_debug) perror("write(can, immediate)");
-                    // try to recover on typical transient errors
                     if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                         uint64_t now2 = mono_ns();
-                        if (now2 - last_reopen_try > 2000000000ull) { // 2s backoff
+                        if (now2 - last_reopen_try > 2000000000ull){
                             close(can);
                             can = reopen_can_bound(g_ifname);
                             last_reopen_try = now2;
@@ -296,11 +282,64 @@ int main(int argc, char** argv){
                 }
                 E[i].state->immediate = 0; // ack
             }
+        }
 
+        // 3) Determine the earliest cyclic deadline
+        uint64_t earliest_deadline = 0;  // 0 => none
+        for (size_t i=0; i<N; ++i){
+            shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
             if (s.cyclic && s.interval_ms){
-                if (now >= E[i].next_send_ns){
+                if (E[i].next_send_ns == 0){
+                    // preserve "send once immediately on enable"
+                    E[i].next_send_ns = now;
+                }
+                if (earliest_deadline == 0 || E[i].next_send_ns < earliest_deadline)
+                    earliest_deadline = E[i].next_send_ns;
+            } else {
+                E[i].next_send_ns = 0;
+            }
+        }
+
+        if (earliest_deadline == 0){
+            // No cyclic active → just poll in 1 ms
+            sleep_until_abs_ns(now + poll_ns);
+            continue;
+        }
+
+        // 4) If the next send is farther than poll_ns away, sleep until (deadline - poll_ns),
+        //    re-apply requests/immediates, then final exact sleep to the deadline.
+        now = mono_ns();
+        if ((int64_t)(earliest_deadline - now) > (int64_t)poll_ns){
+            sleep_until_abs_ns(earliest_deadline - poll_ns);
+
+            // quick pass to absorb late requests and immediates
+            for (size_t i=0; i<N; ++i) apply_request(&E[i]);
+            for (size_t i=0; i<N; ++i){
+                shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+                if (s.immediate){
                     struct can_frame f = {0};
-                    f.can_id  = s.can_id;
+                    f.can_id  = (s.can_id & 0x1FFFFFFF);
+                    f.can_dlc = 8;
+                    memcpy(f.data, s.data, 8);
+                    if (write(can, &f, sizeof f) < 0 && g_log_debug) perror("write(can, immediate)");
+                    E[i].state->immediate = 0;
+                }
+            }
+            now = mono_ns();
+        }
+
+        // 5) Final precise sleep to the earliest deadline
+        sleep_until_abs_ns(earliest_deadline);
+        now = mono_ns();
+
+        // 6) Send all entries whose deadlines have arrived, drift-free (increment from previous deadline)
+        for (size_t i=0; i<N; ++i){
+            shm_msg_t s; read_shm_consistent((volatile shm_msg_t*)E[i].state, &s);
+            if (s.cyclic && s.interval_ms){
+                const uint64_t period = (uint64_t)s.interval_ms * 1000000ull;
+                while (now >= E[i].next_send_ns){
+                    struct can_frame f = {0};
+                    f.can_id  = (s.can_id & 0x1FFFFFFF);
                     f.can_dlc = 8;
                     memcpy(f.data, s.data, 8);
                     ssize_t w = write(can, &f, sizeof f);
@@ -309,17 +348,15 @@ int main(int argc, char** argv){
                         if (g_log_debug) perror("write(can, cyclic)");
                         if (err==ENOBUFS || err==ENETDOWN || err==ENETUNREACH || err==ENODEV){
                             uint64_t now2 = mono_ns();
-                            if (now2 - last_reopen_try > 2000000000ull) {
+                            if (now2 - last_reopen_try > 2000000000ull){
                                 close(can);
                                 can = reopen_can_bound(g_ifname);
                                 last_reopen_try = now2;
                             }
                         }
                     }
-                    E[i].next_send_ns = now + (uint64_t)s.interval_ms * 1000000ull;
+                    E[i].next_send_ns += period;   // advance from previous deadline (no bias)
                 }
-            } else {
-                E[i].next_send_ns = now; // sofort bereit, wenn später aktiviert
             }
         }
     }
