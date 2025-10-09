@@ -1,0 +1,17 @@
+@startuml
+hide footbox
+skinparam shadowing false
+participant "CAN bus\n(can0)" as CAN
+participant "can_sender_v2" as SND
+participant "/... .rx\n(RX state)" as RX
+participant "Node-RED\n(dashboard/logic)" as NR
+
+CAN -> SND : Receive frame (can_id, data[8])
+SND -> RX  : Write latest RX snapshot\n(data, can_id, ts, updated++)
+NR -> RX   : Read RX asynchronously
+note over NR
+Node-RED shows latest RX values or triggers logic
+independent of TX timing.
+end note
+@enduml
+

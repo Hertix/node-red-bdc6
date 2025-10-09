@@ -1,0 +1,13 @@
+<!-- nodes/BDC6_LS_Actual.html -->
+<script type="text/javascript">
+RED.nodes.registerType('BDC6_LS_Actual',{
+  category:'BDC6_LS', color:'#e8f0ff',
+  defaults:{ name: {value: 'BDC6_LS_Actual (CAN 0x361)'} },
+  inputs:1, outputs:1, icon:'node-red/message.png',
+  paletteLabel:'BDC6_LS_Actual',
+  label:function(){ return this.name || 'BDC6_LS_Actual (CAN 0x361)'; }
+});
+</script>
+<div class="form-tips">
+  <p>Set <code>msg.payload</code> = &#123; SignalName: value, ... &#125;. Node packs all fields and outputs <code>raw_data_hex</code> + <code>can_id</code>.</p>
+</div>

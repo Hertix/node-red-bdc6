@@ -1,0 +1,13 @@
+<!-- nodes/BDC6_APPL_FPGA_IDENT.html -->
+<script type="text/javascript">
+RED.nodes.registerType('BDC6_APPL_FPGA_IDENT',{
+  category:'BDC6*', color:'#e8f0ff',
+  defaults:{ name: {value: 'BDC6_APPL_FPGA_IDENT (CAN 0x1bda0005)'} },
+  inputs:1, outputs:1, icon:'node-red/message.png',
+  paletteLabel:'BDC6_APPL_FPGA_IDENT',
+  label:function(){ return this.name || 'BDC6_APPL_FPGA_IDENT (CAN 0x1bda0005)'; }
+});
+</script>
+<div class="form-tips">
+  <p>Set <code>msg.payload</code> = &#123; SignalName: value, ... &#125;. Node packs all fields and outputs <code>raw_data_hex</code> + <code>can_id</code>.</p>
+</div>

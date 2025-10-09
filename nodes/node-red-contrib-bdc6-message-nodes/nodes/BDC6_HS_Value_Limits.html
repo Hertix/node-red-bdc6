@@ -1,0 +1,13 @@
+<!-- nodes/BDC6_HS_Value_Limits.html -->
+<script type="text/javascript">
+RED.nodes.registerType('BDC6_HS_Value_Limits',{
+  category:'BDC6_HS', color:'#e8f0ff',
+  defaults:{ name: {value: 'BDC6_HS_Value_Limits (CAN 0x338)'} },
+  inputs:1, outputs:1, icon:'node-red/message.png',
+  paletteLabel:'BDC6_HS_Value_Limits',
+  label:function(){ return this.name || 'BDC6_HS_Value_Limits (CAN 0x338)'; }
+});
+</script>
+<div class="form-tips">
+  <p>Set <code>msg.payload</code> = &#123; SignalName: value, ... &#125;. Node packs all fields and outputs <code>raw_data_hex</code> + <code>can_id</code>.</p>
+</div>

@@ -1,0 +1,31 @@
+{
+  "name": "node-red-contrib-bdc6-message-nodes",
+  "version": "0.2.0",
+  "description": "One node per CAN message composing all signals",
+  "license": "MIT",
+  "node-red": {
+    "nodes": {
+      "Diag_Functional_Req_Broadcast": "nodes/Diag_Functional_Req_Broadcast.js",
+      "BDC6_Zmeas": "nodes/BDC6_Zmeas.js",
+      "BDC6_State_Request": "nodes/BDC6_State_Request.js",
+      "BDC6_State_Actual": "nodes/BDC6_State_Actual.js",
+      "BDC6_LS_Value_Limits": "nodes/BDC6_LS_Value_Limits.js",
+      "BDC6_LS_Actual": "nodes/BDC6_LS_Actual.js",
+      "BDC6_IMD_Actual": "nodes/BDC6_IMD_Actual.js",
+      "BDC6_HS_Value_Limits": "nodes/BDC6_HS_Value_Limits.js",
+      "BDC6_HS_Actual": "nodes/BDC6_HS_Actual.js",
+      "BDC6_FBL_IDENT": "nodes/BDC6_FBL_IDENT.js",
+      "BDC6_Errors_Warnings": "nodes/BDC6_Errors_Warnings.js",
+      "BDC6_Diag_Resp": "nodes/BDC6_Diag_Resp.js",
+      "BDC6_Diag_Req": "nodes/BDC6_Diag_Req.js",
+      "BDC6_DBG_TX": "nodes/BDC6_DBG_TX.js",
+      "BDC6_DBG_RX": "nodes/BDC6_DBG_RX.js",
+      "BDC6_CrashEvent": "nodes/BDC6_CrashEvent.js",
+      "BDC6_APPL_SWFW_IDENT": "nodes/BDC6_APPL_SWFW_IDENT.js",
+      "BDC6_APPL_PARAM_IDENT": "nodes/BDC6_APPL_PARAM_IDENT.js",
+      "BDC6_APPL_FPGA_IDENT": "nodes/BDC6_APPL_FPGA_IDENT.js",
+      "BDC6_APPL_CONFIG_IDENT": "nodes/BDC6_APPL_CONFIG_IDENT.js",
+      "BDC6_APPL_CALIB_IDENT": "nodes/BDC6_APPL_CALIB_IDENT.js"
+    }
+  }
+}

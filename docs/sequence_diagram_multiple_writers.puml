@@ -1,0 +1,15 @@
+@startuml
+skinparam shadowing false
+participant "Writer A" as A
+participant "Writer B" as B
+participant "/... .maskreq\n{ data[8], mask[8], immediate }" as MREQ
+participant "can_sender_v2" as SND
+participant "/... (state)" as STATE
+
+A -> MREQ : dataA, maskA, imm?
+B -> MREQ : dataB, maskB, imm?
+SND -> MREQ : read pending masked updates
+SND -> SND  : state = (state & ~mask) | (data & mask)\n(merged across all arrivals)
+SND -> STATE: write state
+@enduml
+

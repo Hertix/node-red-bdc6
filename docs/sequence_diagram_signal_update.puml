@@ -1,0 +1,20 @@
+@startuml
+hide footbox
+skinparam shadowing false
+participant "Node-RED\n(signal node)" as NR
+participant "/... .req_nr\n(write-only)" as REQ
+participant "can_sender_v2" as SND
+participant "/... (state)" as STATE
+participant "CAN bus\n(can0)" as CAN
+
+NR -> REQ : Write request (only changed fields encoded\ninto full 8-byte payload)
+SND -> REQ : Read request (non-blocking loop)
+SND -> SND : RMW: merge into state snapshot,\nOR 'immediate', set timing
+SND -> STATE : Write/ack state (request cleared)
+alt immediate
+  SND -> CAN : TX now
+else cyclic
+  SND -> CAN : TX at next interval_ms
+end
+@enduml
+

@@ -1,0 +1,21 @@
+@startuml
+hide footbox
+skinparam shadowing false
+participant "Node-RED\n(State_Request node)" as NR
+participant "/SM_BDC6_State_Request.req_nr\n(write-only)" as REQ
+participant "can_sender_v2" as SND
+participant "/SM_BDC6_State_Request\n(state)" as STATE
+participant "CAN bus\n(can0)" as CAN
+
+NR -> REQ : Write baseline (data[8], can_id,\ninterval_ms/cyclic, immediate=1)
+SND -> REQ : Poll/Read request
+SND -> SND : RMW merge → payload, timing, immediate
+SND -> STATE : Write state (ack/clear immediate)
+SND -> CAN : Send frame (immediate TX)
+
+note over STATE
+State now contains the current payload/timing.
+Node-RED can read whenever needed.
+end note
+@enduml
+

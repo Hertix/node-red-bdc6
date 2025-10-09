@@ -1,0 +1,122 @@
+message_name;signal_name;can_id_hex;start_bit;bit_length;factor;offset;unit;byte_order;signed;min;max;default;category;multiplex;comment
+Diag_Functional_Req_Broadcast;ISO_ALL_Req_Data;0x1bdbfff1;0;64;1;0;;intel;0;0;0;0;BDC6*;-;
+BDC6_Zmeas;BDC6_Zmeas_Status;0x380;14;2;1;0;;intel;0;0;3;0;BDC6*;-;tbd
+BDC6_Zmeas;BDC6_Zmeas_Frequency;0x380;0;14;1;0;Hz;intel;0;0;16383;0;BDC6*;-;Impedance measurement injected current frequency report.
+BDC6_Zmeas;BDC6_Zmeas_Amplitude;0x380;16;8;1;0;A;intel;0;0;255;0;BDC6*;-;Impedance measurement injected current amplitude report.
+BDC6_Zmeas;BDC6_Z_Real;0x380;48;16;1;0;;intel;0;0;0;0;BDC6*;-;
+BDC6_Zmeas;BDC6_Z_Imaginary;0x380;32;16;1;0;;intel;0;0;0;0;BDC6*;-;
+BDC6_State_Request;BDC6_Zmeas_Request;0x308;9;1;1;0;;intel;0;0;1;0;BDC6_State_Request;-;Status request for the FC impedance measurement. functionality.
+BDC6_State_Request;BDC6_Zmeas_F_Request;0x308;32;14;1;0;Hz;intel;0;0;16383;0;BDC6_State_Request;-;Impedance measurement injected current frequency request.
+BDC6_State_Request;BDC6_Zmeas_A_Request;0x308;48;8;1;0;A;intel;0;0;255;0;BDC6_State_Request;-;Impedance measurement injected current amplitude request.
+BDC6_State_Request;BDC6_Value_Request;0x308;16;16;0.03125;-1024;V or A;intel;0;-1024;1023.96875;0;BDC6_State_Request;-;Set point value request. Depending on control mode, it can be either a voltage or current value.
+BDC6_State_Request;BDC6_State_Request;0x308;0;4;1;0;;intel;0;0;15;0;BDC6_State_Request;-;System state request.
+BDC6_State_Request;BDC6_IMD_Request;0x308;8;1;1;0;;intel;0;0;1;0;BDC6_State_Request;-;Status request for the insulation monitoring device (IMD) functionality.
+BDC6_State_Request;BDC6_Control_Mode_Request;0x308;4;3;1;0;;intel;0;0;7;0;BDC6_State_Request;-;Main controller mode request.
+BDC6_State_Request;BDC6_ClrError_Request;0x308;7;1;1;0;;intel;0;0;1;0;BDC6_State_Request;-;Rising edge from 0 --> 1 will request a general clear error....
+BDC6_State_Actual;BDC6_Warning_Actual;0x310;17;1;1;0;;intel;0;0;1;0;BDC6*;-;Report if any warning is active in BDC6.
+BDC6_State_Actual;BDC6_U_Derating;0x310;18;1;1;0;;intel;0;0;1;0;BDC6*;-;Report if there is operation derating due to voltage condition, meaning that at steady-state either LS or HS voltage or the difference between the two is in derating region.
+BDC6_State_Actual;BDC6_T_Derating;0x310;19;1;1;0;;intel;0;0;1;0;BDC6*;-;Report if there is operation derating due to temperature condition, meaning that temperature is in derating region.
+BDC6_State_Actual;BDC6_State_Actual;0x310;0;4;1;0;;intel;0;0;15;15;BDC6*;-;Report of system actual state.
+BDC6_State_Actual;BDC6_limiter_ULS_min;0x310;10;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for ULS minimum limiter active due to voltage reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_ULS_max;0x310;11;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for ULS maximum limiter active due to voltage reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_UHS_min;0x310;14;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for UHS minimum limiter active due to voltage reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_UHS_max;0x310;15;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for UHS maximum limiter active due to voltage reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_ILS_min;0x310;8;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for ILS minimum limiter active due to current reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_ILS_max;0x310;9;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for ILS maximum limiter active due to current reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_IHS_min;0x310;12;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for IHS minimum limiter active due to current reaching the customer set limit.
+BDC6_State_Actual;BDC6_limiter_IHS_max;0x310;13;1;1;0;;intel;0;0;1;0;BDC6*;-;Flag for IHS maximum limiter active due to current reaching the customer set limit.
+BDC6_State_Actual;BDC6_Error_Actual;0x310;16;1;1;0;;intel;0;0;1;0;BDC6*;-;Report if any error is active in BDC6.
+BDC6_State_Actual;BDC6_Control_Mode_Actual;0x310;4;3;1;0;;intel;0;0;7;0;BDC6*;-;Main controller mode report.
+BDC6_State_Actual;BDC6_Capability_Actual;0x310;32;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6*;-;Report available capability relative to customer defined max LS current.
+BDC6_LS_Value_Limits;BDC6_ULS_Minimum;0x348;48;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_LS;-;LS connection minimum voltage limiter request.
+BDC6_LS_Value_Limits;BDC6_ULS_Maximum;0x348;32;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_LS;-;LS connection maximum voltage limiter request.
+BDC6_LS_Value_Limits;BDC6_ILS_Minimum;0x348;16;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_LS;-;LS connection minimum current limiter request.
+BDC6_LS_Value_Limits;BDC6_ILS_Maximum;0x348;0;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_LS;-;LS connection maximum current limiter request.
+BDC6_LS_Actual;BDC6_ULS_Actual;0x361;32;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_LS;Signal_Group_LS_Actual;LS connection voltage report.
+BDC6_LS_Actual;BDC6_LS_CRC;0x361;0;8;1;0;;intel;0;0;255;0;BDC6_LS;Signal_Group_LS_Actual;End-to-end (FuSa) cyclic redundancy check for LS Actual message.
+BDC6_LS_Actual;BDC6_LS_AliveCounter;0x361;8;4;1;0;;intel;0;0;15;0;BDC6_LS;Signal_Group_LS_Actual;End-to-end (FuSa) alive counter for LS Actual message.
+BDC6_LS_Actual;BDC6_ILS_Actual;0x361;16;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_LS;Signal_Group_LS_Actual;LS connection current report.
+BDC6_LS_Actual;BDC6_FuSaError_LS_OVP;0x361;49;1;1;0;;intel;0;0;1;0;BDC6_LS;Signal_Group_LS_Actual;Functional Safety (FuSa) error flag for LS overvoltage protection.
+BDC6_LS_Actual;BDC6_FuSaError_LS_OCP;0x361;48;1;1;0;;intel;0;0;1;0;BDC6_LS;Signal_Group_LS_Actual;Functional Safety (FuSa) error flag for LS connection overcurrent protection.
+BDC6_IMD_Actual;BDC6_Rinsulation;0x390;0;16;1;0;kOhm;intel;0;0;65535;0;BDC6*;-;Minimum insulation resistance value of the two measured potentials.
+BDC6_IMD_Actual;BDC6_IMD_Status;0x390;16;2;1;0;;intel;0;0;3;0;BDC6*;-;00 � Isolation status OK...
+BDC6_IMD_Actual;BDC6_IMD_No_New_Estimated;0x390;22;1;1;0;;intel;0;0;1;0;BDC6*;-;0 � The flag is zero when new and unread isolation values have been calculated....
+BDC6_IMD_Actual;BDC6_IMD_High_Uncertainty;0x390;21;1;1;0;;intel;0;0;1;0;BDC6*;-;0 � Uncertainty of calculated values is less than 5%...
+BDC6_IMD_Actual;BDC6_IMD_Hardware_Error;0x390;23;1;1;0;;intel;0;0;1;0;BDC6*;-;0 � No hardware error...
+BDC6_IMD_Actual;BDC6_IMD_CRC;0x390;56;8;1;0;;intel;0;0;255;0;BDC6*;-;End-to-end (FuSa) cyclic redundancy check for IMD Actual message.
+BDC6_IMD_Actual;BDC6_IMD_AliveCounter;0x390;48;4;1;0;;intel;0;0;15;0;BDC6*;-;End-to-end (FuSa) alive counter for IMD Actual message.
+BDC6_HS_Value_Limits;BDC6_UHS_Minimum;0x338;48;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_HS;-;HS connection minimum voltage limiter request.
+BDC6_HS_Value_Limits;BDC6_UHS_Maximum;0x338;32;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_HS;-;HS connection maximum voltage limiter request.
+BDC6_HS_Value_Limits;BDC6_IHS_Minimum;0x338;16;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_HS;-;HS connection minimum current limiter request.
+BDC6_HS_Value_Limits;BDC6_IHS_Maximum;0x338;0;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_HS;-;HS connection maximum current limiter request.
+BDC6_HS_Actual;BDC6_UHS_Actual;0x351;32;16;0.03125;0;V;intel;0;0;2047.96875;0;BDC6_HS;Signal_Group_HS_Actual;HS connection voltage report.
+BDC6_HS_Actual;BDC6_IHS_Actual;0x351;16;16;0.03125;-1024;A;intel;0;-1024;1023.96875;-1024;BDC6_HS;Signal_Group_HS_Actual;HS connection current report.
+BDC6_HS_Actual;BDC6_HS_CRC;0x351;0;8;1;0;;intel;0;0;255;0;BDC6_HS;Signal_Group_HS_Actual;End-to-end (FuSa) cyclic redundancy check for HS Actual message.
+BDC6_HS_Actual;BDC6_HS_AliveCounter;0x351;8;4;1;0;;intel;0;0;15;0;BDC6_HS;Signal_Group_HS_Actual;End-to-end (FuSa) alive counter for the HS Actual message.
+BDC6_HS_Actual;BDC6_FuSaWarning_HS_UVP;0x351;50;1;1;0;;intel;0;0;1;0;BDC6_HS;Signal_Group_HS_Actual;Functional Safety (FuSa) warning flag for HS undervoltage event.
+BDC6_HS_Actual;BDC6_FuSaError_OTP;0x351;52;1;1;0;;intel;0;0;1;0;BDC6_HS;Signal_Group_HS_Actual;Functional safety error flag for the overvoltage protection feature. A HIGH flag signals a detected overtemperature
+BDC6_HS_Actual;BDC6_FuSaError_HVIL;0x351;51;1;1;0;;intel;0;0;1;0;BDC6_HS;Signal_Group_HS_Actual;Functional Safety (FuSa) error flag for HV interlock loop open.
+BDC6_HS_Actual;BDC6_FuSaError_HS_OVP;0x351;49;1;1;0;;intel;0;0;1;0;BDC6_HS;Signal_Group_HS_Actual;Functional Safety (FuSa) error flag for HS connection overvoltage protection.
+BDC6_HS_Actual;BDC6_FuSaError_HS_OCP;0x351;48;1;1;0;;intel;0;0;1;0;BDC6_HS;Signal_Group_HS_Actual;Functional Safety (FuSa) error flag for HS connection overcurrent protection.
+BDC6_FBL_IDENT;BDC6_Ident_Fbl_Test;0x1bda0000;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_FBL_IDENT;BDC6_Ident_Fbl_Rev;0x1bda0000;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_FBL_IDENT;BDC6_Ident_Fbl_Mid;0x1bda0000;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_FBL_IDENT;BDC6_Ident_Fbl_Lo;0x1bda0000;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_FBL_IDENT;BDC6_Ident_Fbl_Hi;0x1bda0000;0;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_Errors_Warnings;BDC6_Warning_xx_Generic;0x320;56;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for uncategorized warning events. (temporary)
+BDC6_Errors_Warnings;BDC6_Warning_07_CAN;0x320;38;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for CAN communication.
+BDC6_Errors_Warnings;BDC6_Warning_06_T30_OoR;0x320;37;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for LV supply out of acceptable voltage range.
+BDC6_Errors_Warnings;BDC6_Warning_05_ULS;0x320;36;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for LS moderate overvoltage events.
+BDC6_Errors_Warnings;BDC6_Warning_04_UHS;0x320;35;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for HS moderate overvoltage events
+BDC6_Errors_Warnings;BDC6_Warning_03_OTP_int;0x320;34;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for internal overtemperature.
+BDC6_Errors_Warnings;BDC6_Warning_02_OTP_ext;0x320;33;1;1;0;;intel;0;0;1;0;BDC6*;-;Warning flag for external temperature out of range.
+BDC6_Errors_Warnings;BDC6_Error_xx_ILS;0x320;14;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for LS overcurrent events.
+BDC6_Errors_Warnings;BDC6_Error_xx_IHS;0x320;15;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for HS overcurrent events.
+BDC6_Errors_Warnings;BDC6_Error_xx_Generic;0x320;24;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for uncategorized error events. (temporary)
+BDC6_Errors_Warnings;BDC6_Error_15_Init;0x320;16;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag to signal initialization errors. Initialization errors can occur due to HW/SW or SW/SW consistency checks.
+BDC6_Errors_Warnings;BDC6_Error_14_T15;0x320;13;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for enable line error. Includes unexpected disable command during operation.
+BDC6_Errors_Warnings;BDC6_Error_13_ILoop;0x320;12;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for unexpected current in the HV- terminals. Can occur in case of undesirable external HV- loop.
+BDC6_Errors_Warnings;BDC6_Error_12_Sensors;0x320;11;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for internal sensor failure.
+BDC6_Errors_Warnings;BDC6_Error_11_ControlU;0x320;10;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for processing unit failure.
+BDC6_Errors_Warnings;BDC6_Error_10_LVPS;0x320;9;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for internal LV power supply error.
+BDC6_Errors_Warnings;BDC6_Error_09_ActDisch;0x320;8;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for active discharge error. Includes unsucessful discharge or hardware faults.
+BDC6_Errors_Warnings;BDC6_Error_08_OTP;0x320;7;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for internal or external overtemperature protection, not functional safety related. Several errors are bundled together.
+BDC6_Errors_Warnings;BDC6_Error_07_CAN;0x320;6;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for CAN interface related errors. Includes transmission and reception faults , message timeout or transceiver faults.
+BDC6_Errors_Warnings;BDC6_Error_06_Emergency;0x320;5;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for crash signal or CAN message detected.
+BDC6_Errors_Warnings;BDC6_Error_05_T30_OoR;0x320;4;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for LV power supply problems. Includes extreme under- and overvoltages or moderate transient timeout.
+BDC6_Errors_Warnings;BDC6_Error_04_UHS_ULS;0x320;3;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for voltage difference between HS and LS negative or too small during operation.
+BDC6_Errors_Warnings;BDC6_Error_03_UHS;0x320;2;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for HS extreme overvoltage events.
+BDC6_Errors_Warnings;BDC6_Error_02_ULS;0x320;1;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for LS extreme overvoltage events.
+BDC6_Errors_Warnings;BDC6_Error_01_Request;0x320;0;1;1;0;;intel;0;0;1;0;BDC6*;-;Error flag for invalid external request. External invalid request includes invalid state, control mode or value request.
+BDC6_Diag_Resp;ISOx_BDC6_Resp_Data;0x1bdaf100;0;64;1;0;;intel;0;0;0;0;BDC6*;-;
+BDC6_Diag_Req;ISOx_BDC6_Req_Data;0x1bda00f1;0;64;1;0;;intel;0;0;0;0;BDC6*;-;
+BDC6_DBG_TX;BDC6_DBG_TX;0x439;0;64;1;0;;intel;0;0;0;0;BDC6*;-;Transmitting messages for Param functionality.
+BDC6_DBG_RX;BDC6_DBG_RX;0x431;0;64;1;0;;intel;0;0;0;0;BDC6*;-;Receiving messages for Param functionality.
+BDC6_CrashEvent;BDC6_Crash_Event;0x379;16;1;1;0;;intel;0;0;1;0;BDC6*;Signal_Group_CrashEvent;Status of vehicle crash event.
+BDC6_CrashEvent;BDC6_Crash_CRC;0x379;0;8;1;0;;intel;0;0;255;0;BDC6*;Signal_Group_CrashEvent;End-to-end (FuSa) cyclic redundancy check for CrashEvent message.
+BDC6_CrashEvent;BDC6_Crash_AliveCounter;0x379;8;4;1;0;;intel;0;0;15;0;BDC6*;Signal_Group_CrashEvent;End-to-end (FuSa) alive counter for CrashEvent message.
+BDC6_APPL_SWFW_IDENT;BDC6_Ident_Appl_Test;0x1bda0001;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_SWFW_IDENT;BDC6_Ident_Appl_Rev;0x1bda0001;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_APPL_SWFW_IDENT;BDC6_Ident_Appl_Mid;0x1bda0001;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_SWFW_IDENT;BDC6_Ident_Appl_Lo;0x1bda0001;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_SWFW_IDENT;BDC6_Ident_Appl_Hi;0x1bda0001;0;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_PARAM_IDENT;BDC6_Ident_Param_Test;0x1bda0004;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_PARAM_IDENT;BDC6_Ident_Param_Rev;0x1bda0004;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_APPL_PARAM_IDENT;BDC6_Ident_Param_Mid;0x1bda0004;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_PARAM_IDENT;BDC6_Ident_Param_Lo;0x1bda0004;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_PARAM_IDENT;BDC6_Ident_Param_Hi;0x1bda0004;0;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_FPGA_IDENT;BDC6_Ident_Fpga_Test;0x1bda0005;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_FPGA_IDENT;BDC6_Ident_Fpga_Rev;0x1bda0005;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_APPL_FPGA_IDENT;BDC6_Ident_Fpga_Mid;0x1bda0005;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_FPGA_IDENT;BDC6_Ident_Fpga_Lo;0x1bda0005;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_FPGA_IDENT;BDC6_Ident_Fpga_Hi;0x1bda0005;0;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CONFIG_IDENT;BDC6_Ident_Config_Test;0x1bda0003;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CONFIG_IDENT;BDC6_Ident_Config_Rev;0x1bda0003;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_APPL_CONFIG_IDENT;BDC6_Ident_Config_Mid;0x1bda0003;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CONFIG_IDENT;BDC6_Ident_Config_Lo;0x1bda0003;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CONFIG_IDENT;BDC6_Ident_Config_Hi;0x1bda0003;0;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CALIB_IDENT;BDC6_Ident_Calib_Test;0x1bda0002;24;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CALIB_IDENT;BDC6_Ident_Calib_Rev;0x1bda0002;32;32;1;0;;intel;0;0;4294967295;0;BDC6*;-;
+BDC6_APPL_CALIB_IDENT;BDC6_Ident_Calib_Mid;0x1bda0002;8;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CALIB_IDENT;BDC6_Ident_Calib_Lo;0x1bda0002;16;8;1;0;;intel;0;0;255;0;BDC6*;-;
+BDC6_APPL_CALIB_IDENT;BDC6_Ident_Calib_Hi;0x1bda0002;0;8;1;0;;intel;0;0;255;0;BDC6*;-;

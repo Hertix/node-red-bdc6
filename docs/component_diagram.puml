@@ -1,0 +1,71 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment left
+skinparam wrapWidth 180
+hide stereotype
+
+rectangle "Node-RED (signal-level, async)" as NR {
+  component "BDC6_State_Request node" as NR_SR
+  component "BDC6_HS_Value_Limits node" as NR_HS
+  component "BDC6_LS_Value_Limits node" as NR_LS
+}
+
+package "Shared Memory  (/dev/shm)" as SHM {
+  rectangle "<<SHM>> /SM_BDC6_State_Request.req_nr\n(write-only by Node-RED)" as SHM_SR_REQ
+  rectangle "<<SHM>> /SM_BDC6_State_Request\n(state, owned by can_sender_v2)" as SHM_SR_STATE
+  rectangle "<<SHM>> /SM_BDC6_State_Request.rx\n(RX, owned by can_sender_v2)" as SHM_SR_RX
+
+  rectangle "<<SHM>> /SM_BDC6_HS_Value_Limits.req_nr" as SHM_HS_REQ
+  rectangle "<<SHM>> /SM_BDC6_HS_Value_Limits" as SHM_HS_STATE
+  rectangle "<<SHM>> /SM_BDC6_HS_Value_Limits.rx" as SHM_HS_RX
+
+  rectangle "<<SHM>> /SM_BDC6_LS_Value_Limits.req_nr" as SHM_LS_REQ
+  rectangle "<<SHM>> /SM_BDC6_LS_Value_Limits" as SHM_LS_STATE
+  rectangle "<<SHM>> /SM_BDC6_LS_Value_Limits.rx" as SHM_LS_RX
+}
+
+component "can_sender_v2\n(writer + reader)\n• merges .req_nr → state (RMW, ack)\n• TX: immediate/cyclic\n• RX → .rx" as SND
+
+node "CAN bus / BDC6 device\n(can0)" as CAN
+
+' Node-RED writes requests (async)
+NR_SR -right-> SHM_SR_REQ : write request (signal→payload)
+NR_HS -right-> SHM_HS_REQ
+NR_LS -right-> SHM_LS_REQ
+
+' can_sender_v2 reads req_nr, writes state, TX to CAN
+SHM_SR_REQ -right-> SND : read + merge\n(RMW)
+SHM_HS_REQ -right-> SND
+SHM_LS_REQ -right-> SND
+
+SND -left-> SHM_SR_STATE : write/ack state
+SND -left-> SHM_HS_STATE
+SND -left-> SHM_LS_STATE
+
+SND -right-> CAN : TX (immediate / cyclic)
+
+' CAN RX back to SHM
+CAN -left-> SND : RX frames
+SND -left-> SHM_SR_RX : write RX
+SND -left-> SHM_HS_RX
+SND -left-> SHM_LS_RX
+
+' Node-RED reads state/RX asynchronously
+SHM_SR_STATE -left-> NR_SR : read state
+SHM_SR_RX    -left-> NR_SR : read RX
+
+SHM_HS_STATE -left-> NR_HS
+SHM_HS_RX    -left-> NR_HS
+
+SHM_LS_STATE -left-> NR_LS
+SHM_LS_RX    -left-> NR_LS
+
+note bottom
+Init (once, from Node-RED):
+• set can_id + defaults in .req_nr (optional: cyclic/interval_ms)
+• trigger immediate=1 for baseline write
+end note
+
+@enduml
+
