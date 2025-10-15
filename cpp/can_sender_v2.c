@@ -40,6 +40,16 @@ typedef struct {
     uint64_t    next_send_ns;
 } entry_t;
 
+// RX record layout: [8 data][u32 can_id LE][u16 dlc][u8 rsv][u8 rsv]
+#pragma pack(push,1)
+typedef struct {
+    uint8_t  data[8];     // 0..7
+    uint32_t can_id;      // 8..11 LE
+    uint16_t dlc;         // 12..13 LE
+    uint8_t  rsv0, rsv1;  // 14..15
+} rx_rec_t;
+#pragma pack(pop)
+
 static const char *g_ifname    = "can0";
 static const char *g_prefix    = "";         // optional prefix in filenames (empty = none)
 static const char *g_shm_dir   = "/dev/shm"; // SHM directory
@@ -105,6 +115,33 @@ static bool map_file_rw(const char* path, int* fd_out, void** mem_out, size_t sz
 
     *fd_out = fd;
     *mem_out = mem;
+    return true;
+}
+
+// Write one RX record to a per-CAN-ID file: <dir>/<prefix>SM_RX_<canid_hex>
+static bool write_rx_file(uint32_t can_id_raw, const uint8_t data[8], uint8_t dlc){
+    char path[512];
+    uint32_t can_id = can_id_raw & 0x1FFFFFFF;
+    snprintf(path, sizeof path, "%s/%sSM_RX_%x", g_shm_dir, g_prefix, can_id);
+
+    rx_rec_t rec; memset(&rec, 0, sizeof(rec));
+    memcpy(rec.data, data, 8);
+    rec.can_id = can_id;   // LE host
+    rec.dlc    = dlc;
+
+    mode_t old_um = umask(0027);                 // default 0640
+    int fd = open(path, O_WRONLY | O_CREAT, 0640);
+    int open_err = errno;
+    umask(old_um);
+    if (fd < 0) { errno = open_err; if (g_log_debug) perror("open(rx)"); return false; }
+
+    gid_t want_gid = resolve_gid_by_name(g_shm_group);
+    ensure_perms_group_rw(fd, want_gid);        // sets 0664
+    (void)fchmod(fd, 0640);                     // tighten back to 0640
+
+    ssize_t w = pwrite(fd, &rec, sizeof(rec), 0);
+    if (w != (ssize_t)sizeof(rec)) { if (g_log_debug) perror("pwrite(rx)"); close(fd); return false; }
+    close(fd);
     return true;
 }
 
@@ -254,6 +291,13 @@ int main(int argc, char** argv){
     while (!g_stop){
         const uint64_t poll_ns = 1000000ull;   // 1 ms
         uint64_t now = mono_ns();
+		// Non-blocking drain of RX queue (won't disturb TX timing)
+		for (;;) {
+			struct can_frame fr;
+			ssize_t r = recv(can, &fr, sizeof fr, MSG_DONTWAIT);
+			if (r < 0) break;                 // EAGAIN/EWOULDBLOCK or error
+			if ((size_t)r == sizeof fr) write_rx_file(fr.can_id, fr.data, fr.can_dlc);
+		}
 
         // 1) Merge requests first
         for (size_t i=0; i<N; ++i) apply_request(&E[i]);
@@ -280,7 +324,7 @@ int main(int argc, char** argv){
                         }
                     }
                 }
-                E[i].state->immediate = 0; // ack
+                // E[i].state->immediate = 0; // ack
             }
         }
 
