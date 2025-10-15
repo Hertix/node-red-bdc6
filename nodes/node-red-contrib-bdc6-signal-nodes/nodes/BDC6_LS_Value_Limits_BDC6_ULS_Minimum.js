@@ -1,2 +1,83 @@
-// nodes/BDC6_LS_Value_Limits_BDC6_ULS_Minimum.js
-module.exports = function(RED){const {toRaw,packBits}=require("../lib/bits.js");function N(c){RED.nodes.createNode(this,c);const n=this;const mn=c.message_name,sn=c.signal_name;const idh=c.can_id_hex||"0x000";const sb=parseInt(c.start_bit),bl=parseInt(c.bit_length);const f=Number(c.factor||1),o=Number(c.offset||0);const u=c.unit||"";const bo=(c.byte_order||"intel").toLowerCase();const s=!!c.signed;const pmin=(c.min!==""&&c.min!==undefined)?Number(c.min):null;const pmax=(c.max!==""&&c.max!==undefined)?Number(c.max):null;const d=(c.default!==""&&c.default!==undefined)?Number(c.default):null;function send(v,ov){try{const raw=toRaw(v,f,o,s,pmin,pmax);const {mask,valueBits}=packBits(raw,sb,bl,bo,s);const out={type:"BDC6_SIGNAL_UPDATE",message:mn,signal:sn,can_id:Number(idh),mask_hex:"0x"+mask.toString(16),value_bits_hex:"0x"+valueBits.toString(16),interval_ms:ov?.interval_ms,cyclic:ov?.cyclic,immediate:ov?.immediate,meta:{unit:u,factor:f,offset:o,signed:s,start_bit:sb,bit_length:bl,byte_order:bo}};n.send({topic:`${mn}:${sn}`,payload:out});}catch(e){n.error(e);}}n.on("input",(msg)=>{let v,ov={};if(typeof msg.payload==="number"){v=msg.payload;}else if(msg&&typeof msg.payload==="object"){if(msg.payload.value===undefined){n.error("payload must be number or { value }");return;}v=Number(msg.payload.value);ov={immediate:msg.payload.immediate,cyclic:msg.payload.cyclic,interval_ms:msg.payload.interval_ms};}else{n.error("Unsupported payload");return;}send(v,ov);});if(d!==null)setTimeout(()=>send(d,{}),50);}RED.nodes.registerType("BDC6_LS_Value_Limits_BDC6_ULS_Minimum",N,{category:"BDC6_LS",defaults:{name:{value:"BDC6_LS_Value_Limits:BDC6_ULS_Minimum"},message_name:{value:"BDC6_LS_Value_Limits"},signal_name:{value:"BDC6_ULS_Minimum"},can_id_hex:{value:"0x348"},start_bit:{value:48},bit_length:{value:16},factor:{value:"0.03125"},offset:{value:"0"},unit:{value:"V"},byte_order:{value:"intel"},signed:{value:0},min:{value:"0"},max:{value:"2047.96875"},"default":{value:"0"},category:{value:"BDC6_LS"}},inputs:1,outputs:1,icon:"font-awesome/fa-sliders",color:"#ddeeff",paletteLabel:"BDC6_ULS_Minimum",label:function(){return this.name||"BDC6_LS_Value_Limits:BDC6_ULS_Minimum";}});}
+// nodes/bdc6-bdc6-ls-value-limits-bdc6-uls-minimum.js
+module.exports = function(RED) {
+  function bdc6Bdc6LsValueLimitsBdc6UlsMinimum(config) {
+    RED.nodes.createNode(this, config);
+    const node = this;
+
+    // Static meta for this signal (filled-in constants)
+    const META = {
+      type: "BDC6_SIGNAL_UPDATE",
+      message: "BDC6_LS_Value_Limits",
+      signal:  "BDC6_ULS_Minimum",
+      can_id:  840, // 0x348
+      // for compatibility/debug:
+      mask_hex: "0xffff000000000000",
+      value_bits_hex: "0x0001000000000000",
+      // packing info used by your SHM Writer:
+      unit: "V",
+      factor: 0.03125,
+      offset: 0,
+      signed: false,
+      start_bit: 48,
+      bit_length: 16,
+      byte_order: "intel",
+      meta: {}
+    };
+
+    node.on("input", function (msg, send, done) {
+      try {
+        // Build outgoing payload
+        const out = { ...META };
+
+        // Accept value (physical) or raw bits from multiple locations
+        const isObj = v => v && typeof v === "object" && !Buffer.isBuffer(v);
+        const pIn   = isObj(msg.payload) ? msg.payload : {};
+        const num   = (typeof msg.payload === "number") ? msg.payload : undefined;
+
+        const vPhys =
+          (pIn.value_phys !== undefined) ? pIn.value_phys :
+          (pIn.value      !== undefined) ? pIn.value :
+          (num            !== undefined) ? num :
+          (msg.signal_value !== undefined) ? msg.signal_value :
+          (msg.value        !== undefined) ? msg.value : undefined;
+
+        const vBits =
+          (pIn.value_bits !== undefined) ? pIn.value_bits :
+          (msg.value_bits  !== undefined) ? msg.value_bits : undefined;
+
+        if (vPhys !== undefined) out.value_phys = Number(vPhys);
+        if (vBits !== undefined) out.value_bits = Number(vBits) >>> 0;
+
+        // Optional timing flags (payload overrides top-level)
+        const interval  = (pIn.interval_ms !== undefined) ? pIn.interval_ms : msg.interval_ms;
+        const cyclic    = (pIn.cyclic      !== undefined) ? pIn.cyclic      : msg.cyclic;
+        const immediate = (pIn.immediate   !== undefined) ? pIn.immediate   : msg.immediate;
+
+        if (interval  !== undefined) out.interval_ms = Number(interval);
+        if (cyclic    !== undefined) out.cyclic      = !!cyclic;
+        if (immediate !== undefined) out.immediate   = !!immediate;
+
+        msg.topic   = `${META.message}:${META.signal}`;
+        msg.payload = out;
+
+        node.status({
+          fill: "green",
+          shape: "dot",
+          text: (out.value_phys !== undefined ? `v=${out.value_phys}` : "meta") +
+                (out.interval_ms ? ` @${out.interval_ms}ms` : "")
+        });
+
+        send(msg);
+        done && done();
+      } catch (err) {
+        node.status({ fill: "red", shape: "ring", text: "error" });
+        done && done(err);
+      }
+    });
+  }
+
+  RED.nodes.registerType(
+    "bdc6-bdc6-ls-value-limits-bdc6-uls-minimum",
+    bdc6Bdc6LsValueLimitsBdc6UlsMinimum
+  );
+};

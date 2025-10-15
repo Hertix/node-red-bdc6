@@ -1,0 +1,12 @@
+{
+  "name": "node-red-contrib-bdc6-signals",
+  "version": "0.0.1",
+  "description": "BDC6 signal nodes (writer-style)",
+  "license": "MIT",
+  "keywords": ["node-red"],
+  "node-red": {
+    "nodes": {
+      "bdc6-bdc6-ls-value-limits-bdc6-uls-minimum": "nodes/bdc6-bdc6-ls-value-limits-bdc6-uls-minimum.js"
+    }
+  }
+}

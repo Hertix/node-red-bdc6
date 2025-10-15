@@ -1,0 +1,2116 @@
+[
+    {
+        "id": "bdc6-maint-tab",
+        "type": "tab",
+        "label": "BDC6 Maintenance and Boot",
+        "disabled": false,
+        "info": "Boot + Reset flow for BDC6 global store"
+    },
+    {
+        "id": "tab_reg2",
+        "type": "tab",
+        "label": "BDC6 Auto-Registry Loader",
+        "disabled": false,
+        "info": "Auto-loads all JSONs from a directory and feeds them into your Register node."
+    },
+    {
+        "id": "bdc6_reg_tab",
+        "type": "tab",
+        "label": "BDC6 Auto Register",
+        "disabled": false,
+        "info": "Auto-generated register injects"
+    },
+    {
+        "id": "219e920113492577",
+        "type": "tab",
+        "label": "Main Flow",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7f9c7b72a0bbbc0e",
+        "type": "tab",
+        "label": "BDC6 RX (Read Signals)",
+        "disabled": false,
+        "info": "Reads SHM files, decodes signals, updates global.bdc6Store"
+    },
+    {
+        "id": "bb363cbb77b434e0",
+        "type": "tab",
+        "label": "Restbus",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "tab-bdc6-pilot",
+        "type": "tab",
+        "label": "BDC6 Pilot (one write + one read)",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "bdc6_subflow",
+        "type": "subflow",
+        "name": "BDC6 SHM Write (16B)",
+        "info": "Writes exactly 16 bytes to an existing SHM file using r+b (no truncation). Set msg.filename and msg.payload=Buffer(16).",
+        "in": [
+            {
+                "x": 60,
+                "y": 80,
+                "wires": [
+                    {
+                        "id": "sf_assert"
+                    }
+                ]
+            }
+        ],
+        "out": [],
+        "env": [],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "bdc6_write16_subflow",
+        "type": "subflow",
+        "name": "BDC6 SHM Write 16B (r+b, cached fd)",
+        "info": "Write exactly 16 bytes into an existing /dev/shm file using open('r+') + writeSync.\nKeeps file descriptors cached in global context for high throughput (~100+ msg/s).\nInputs:\n  msg.filename: full path to SHM file (e.g. /dev/shm/SM_BDC6_HS_Value_Limits)\n  msg.payload:  Buffer(16)\n",
+        "in": [
+            {
+                "x": 60,
+                "y": 80,
+                "wires": [
+                    {
+                        "id": "sf_bdc6_assert"
+                    }
+                ]
+            }
+        ],
+        "out": [],
+        "env": [],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "8321136a8ccdcc6b",
+        "type": "revpi-server",
+        "host": "localhost",
+        "port": 8000,
+        "user": "",
+        "password": "",
+        "rejectUnauthorized": false,
+        "ca": ""
+    },
+    {
+        "id": "c9f5c76432753d77",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "b2855d5b.1215c8",
+        "type": "socketcan-config",
+        "interface": "can1"
+    },
+    {
+        "id": "c7347074c9759b03",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "aadccb4e29fe4390",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "c7347074c9759b03",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2beb9fcc09c89f1b",
+        "type": "socketcan-config",
+        "interface": "can0"
+    },
+    {
+        "id": "sf_assert",
+        "type": "function",
+        "z": "bdc6_subflow",
+        "name": "assert filename + Buffer(16)",
+        "func": "if (!msg.filename) throw new Error('missing msg.filename');\nif (!Buffer.isBuffer(msg.payload)) throw new Error('payload not Buffer');\nif (msg.payload.length !== 16) throw new Error('payload length != 16');\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 80,
+        "wires": [
+            [
+                "sf_exec"
+            ]
+        ]
+    },
+    {
+        "id": "sf_exec",
+        "type": "exec",
+        "z": "bdc6_subflow",
+        "command": "/usr/local/sbin/shm_write16.py {{filename}}",
+        "addpay": true,
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "oldrc": false,
+        "name": "shm_write16.py {{filename}}",
+        "x": 540,
+        "y": 80,
+        "wires": [
+            [],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "sf_bdc6_assert",
+        "type": "function",
+        "z": "bdc6_write16_subflow",
+        "name": "assert + write (cached fd)",
+        "func": "// Get fs (from functionGlobalContext if available; fall back to require if enabled)\nlet fs = global.get('fs');\ntry { if (!fs) fs = require('fs'); } catch(e){}\nif (!fs) { node.error('fs not available: enable functionGlobalContext.fs = require(\"fs\") in settings.js'); return null; }\n\nif (!msg || !msg.filename) throw new Error('missing msg.filename');\nif (!Buffer.isBuffer(msg.payload) || msg.payload.length !== 16) throw new Error('payload must be Buffer(16)');\n\nconst path = msg.filename;\nlet cache = global.get('bdc6_fd_cache');\nif (!cache) { cache = {}; global.set('bdc6_fd_cache', cache); }\nlet entry = cache[path];\n\nfunction doWrite(fd) {\n  // write 16 bytes at offset 0, no truncation\n  fs.writeSync(fd, msg.payload, 0, 16, 0);\n}\n\ntry {\n  if (!entry || typeof entry.fd !== 'number') {\n    const fd = fs.openSync(path, 'r+'); // O_RDWR, no O_TRUNC\n    entry = { fd };\n    cache[path] = entry;\n  }\n  doWrite(entry.fd);\n  return msg;\n} catch (err) {\n  // One retry after reopening (handles rotates or service restarts)\n  try {\n    const fd = fs.openSync(path, 'r+');\n    entry = { fd };\n    cache[path] = entry;\n    doWrite(fd);\n    return msg;\n  } catch (e2) {\n    node.error(`shm write failed: ${e2.message}`, msg);\n    return null;\n  }\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "boot-init",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Boot Init (once)",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.1",
+        "topic": "",
+        "x": 150,
+        "y": 100,
+        "wires": [
+            [
+                "store-init"
+            ]
+        ]
+    },
+    {
+        "id": "store-init",
+        "type": "function",
+        "z": "bdc6-maint-tab",
+        "name": "BDC6 Store Init",
+        "func": "// BDC6 Store Init — clean re-initialise on each boot or on manual reset\n\nconst STORE_KEY = 'bdc6Store';\n\n// Optional manual reset: send {reset:true} into this node\nconst forceReset = !!(msg && msg.reset === true);\n\n// Use Function node context (not node.context())\nlet appliedBootId = context.get('appliedBootId');\n\nif (forceReset || appliedBootId === undefined) {\n  const store = {\n    version: 1,\n    createdAt: Date.now(),\n    messages: {}          // will be filled by your Register Message nodes\n  };\n\n  global.set(STORE_KEY, store);\n\n  // mark this runtime as initialised\n  context.set('appliedBootId', Date.now());\n\n  node.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: forceReset ? \"bdc6Store reset (clean)\" : \"bdc6Store initialised (clean)\"\n  });\n  return null;\n}\n\n// Already initialised this runtime → quick self-heal\nconst store = global.get(STORE_KEY);\nif (store && store.messages) {\n  for (const m of Object.values(store.messages)) {\n    if (!m.raw || !(m.raw instanceof Buffer) || m.raw.length !== 8) m.raw = Buffer.alloc(8, 0);\n    if (!m.rxRaw || !(m.rxRaw instanceof Buffer) || m.rxRaw.length !== 8) m.rxRaw = Buffer.alloc(8, 0);\n    if (typeof m.intervalMs !== 'number') m.intervalMs = 0;\n    if (typeof m.cyclic     !== 'number') m.cyclic     = 0;\n    if (typeof m.immediate  !== 'number') m.immediate  = 0;\n    if (typeof m.shmPath    !== 'string') m.shmPath    = `/dev/shm/SM_BDC6_${m.name || 'UNNAMED'}`;\n    if (typeof m.rxPath     !== 'string') m.rxPath     = null;\n    if (typeof m.lastRxTs   !== 'number') m.lastRxTs   = 0;\n    if (typeof m.lastWriteTs!== 'number') m.lastWriteTs= 0;\n    if (!Object.prototype.hasOwnProperty.call(m, 'lastError')) m.lastError = null;\n  }\n}\n\nnode.status({ fill: \"green\", shape: \"ring\", text: \"bdc6Store OK (existing)\" });\nreturn null;\n",
+        "outputs": 0,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "// Der Code hier wird ausgeführt,\n// wenn der Node gestartet wird\nglobal.set('bdc6BootId', Date.now());\n",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "store-reset",
+        "type": "function",
+        "z": "bdc6-maint-tab",
+        "name": "BDC6 Store Reset",
+        "func": "// Bulk reset for all/tx/rx (optionally filtered)\nconst fs = global.get('fs');\nconst STORE_KEY = 'bdc6Store';\nfunction blankTx(m){ m.raw=Buffer.alloc(8,0); m.intervalMs=0; m.cyclic=0; m.immediate=0; m.lastWriteTs=0; m.lastError=null; }\nfunction blankRx(m){ m.rxRaw=Buffer.alloc(8,0); m.lastRxTs=0; m.lastRxValues={}; m._lastSent=null; }\nfunction matches(m,t){ if(!t||t.length===0)return true; for(const x of t){ if(typeof x==='number'&&m.canId===x)return true; if(typeof x==='string'){ if(x.startsWith('0x')&&m.canId===parseInt(x,16))return true; if(m.name===x)return true; } } return false; }\nfunction zeroFile(p){ if(!fs||!p)return; try{ let fd; try{fd=fs.openSync(p,'r+');}catch{fd=fs.openSync(p,'w+');fs.ftruncateSync(fd,16);} const z=Buffer.alloc(16,0); fs.writeSync(fd,z,0,16,0); fs.closeSync(fd);}catch{}}\nconst p=msg&&msg.payload||{}; const mode=String(p.reset||'soft').toLowerCase(); const truncate=!!p.truncate_shm; const store=global.get(STORE_KEY);\nif(!store||!store.messages){ const fresh={version:1,createdAt:Date.now(),messages:{}}; global.set(STORE_KEY,fresh); node.status({fill:'green',shape:'dot',text:'store created'}); return{payload:{ok:true,created:true}}; }\nif(mode==='all'){ const fresh={version:1,createdAt:Date.now(),messages:{}}; global.set(STORE_KEY,fresh); node.status({fill:'red',shape:'dot',text:'store HARD reset'}); return{payload:{ok:true,mode:'all'}}; }\nconst targets=Array.isArray(p.targets)?p.targets:[]; let count=0;\nfor(const m of Object.values(store.messages)){\n  if(!matches(m,targets))continue; if(mode==='soft'||mode==='tx')blankTx(m); if(mode==='soft'||mode==='rx')blankRx(m); if(truncate){ if(mode!=='rx')zeroFile(m.shmPath); zeroFile(m.rxPath||m.shmPath);} count++; }\nglobal.set(STORE_KEY,store);\nnode.status({fill:'yellow',shape:'dot',text:`store ${mode} reset (${count})`});\nreturn{payload:{ok:true,mode,count,truncated:truncate}};",
+        "outputs": 1,
+        "x": 420,
+        "y": 220,
+        "wires": [
+            [
+                "reset-debug"
+            ]
+        ]
+    },
+    {
+        "id": "reset-debug",
+        "type": "debug",
+        "z": "bdc6-maint-tab",
+        "name": "Reset result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "x": 730,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "inj-hard",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Hard reset (all)",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "{\"reset\":\"all\"}",
+        "payloadType": "json",
+        "x": 140,
+        "y": 180,
+        "wires": [
+            [
+                "store-reset"
+            ]
+        ]
+    },
+    {
+        "id": "inj-soft",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Soft reset (TX+RX)",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "{\"reset\":\"soft\"}",
+        "payloadType": "json",
+        "x": 150,
+        "y": 220,
+        "wires": [
+            [
+                "store-reset"
+            ]
+        ]
+    },
+    {
+        "id": "inj-tx",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Reset TX only",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "{\"reset\":\"tx\"}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 260,
+        "wires": [
+            [
+                "store-reset"
+            ]
+        ]
+    },
+    {
+        "id": "inj-rx",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Reset RX only",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "{\"reset\":\"rx\"}",
+        "payloadType": "json",
+        "x": 130,
+        "y": 300,
+        "wires": [
+            [
+                "store-reset"
+            ]
+        ]
+    },
+    {
+        "id": "inj-targeted",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "Targeted reset example",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "",
+        "topic": "",
+        "payload": "{\"reset\":\"tx\",\"targets\":[824,\"BDC6_State_Request\"]}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 340,
+        "wires": [
+            [
+                "store-reset"
+            ]
+        ]
+    },
+    {
+        "id": "d82edde4d959c1f5",
+        "type": "function",
+        "z": "bdc6-maint-tab",
+        "name": "Store Inspector",
+        "func": "const s = global.get('bdc6Store');\nmsg.payload = !s||!s.messages ? {count:0} :\n  { count:Object.keys(s.messages).length,\n    byDir:Object.values(s.messages).reduce((a,m)=>(a[m.dir]=(a[m.dir]||0)+1,a),{}),\n    sample:Object.values(s.messages).slice(0,5).map(m=>`${m.dir}/${m.name} (0x${m.canId.toString(16)})`) };\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 480,
+        "wires": [
+            [
+                "319bf46d20881a50"
+            ]
+        ]
+    },
+    {
+        "id": "16f243331522d7cb",
+        "type": "inject",
+        "z": "bdc6-maint-tab",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 190,
+        "y": 460,
+        "wires": [
+            [
+                "d82edde4d959c1f5"
+            ]
+        ]
+    },
+    {
+        "id": "319bf46d20881a50",
+        "type": "debug",
+        "z": "bdc6-maint-tab",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "inj_dir2",
+        "type": "inject",
+        "z": "tab_reg2",
+        "name": "set registry path",
+        "props": [
+            {
+                "p": "registryDir",
+                "v": "/opt/bdc6/registry",
+                "vt": "str"
+            },
+            {
+                "p": "mode",
+                "v": "scan",
+                "vt": "str"
+            },
+            {
+                "p": "reconcile",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.2",
+        "topic": "",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "fn_loader2"
+            ]
+        ]
+    },
+    {
+        "id": "inj_poll2",
+        "type": "inject",
+        "z": "tab_reg2",
+        "name": "Alle 10s prüfen (optional)",
+        "props": [
+            {
+                "p": "mode",
+                "v": "scan",
+                "vt": "str"
+            },
+            {
+                "p": "reconcile",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "1000",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "x": 220,
+        "y": 260,
+        "wires": [
+            [
+                "fn_loader2"
+            ]
+        ]
+    },
+    {
+        "id": "fn_loader2",
+        "type": "function",
+        "z": "tab_reg2",
+        "name": "Loader (scan & reconcile)",
+        "func": "const fs = global.get('fs');\nif (!fs) { node.error(\"global fs fehlt\"); return null; }\nlet dir = msg.registryDir || flow.get('registryDir') || global.get('bdc6RegistryDir');\nif (!dir) { node.warn(\"Kein registryDir gesetzt\"); return null; }\nflow.set('registryDir', dir);\nconst doReconcile = msg.reconcile === true;\nconst cache = context.get('fileCache') || {};\nconst toRegister = [];\nconst force = msg.force === true;   // <-- neu\nlet files = [];\ntry { files = fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort(); }\ncatch(e){ node.error(\"Kann Verzeichnis nicht lesen: \"+dir+\" (\"+e+\")\"); return null; }\n\nfunction quickSig(stat, txt){ return stat.size+\":\"+stat.mtimeMs+\":\"+txt.length; }\n\nconst seen = new Set();\nfor (const fn of files) {\n  const full = dir + \"/\" + fn;\n  let stat, txt;\n  try { stat = fs.statSync(full); txt = fs.readFileSync(full,'utf8'); } catch (e) { continue; }\n  let obj; try { obj = JSON.parse(txt); } catch(e) { node.warn(\"Fehlerhaftes JSON \"+fn); continue; }\n  if (typeof obj.canId !== 'number' || !obj.name) { node.warn(\"name/canId fehlen in \"+fn); continue; }\n  if (obj.dir !== 'tx' && obj.dir !== 'rx') obj.dir = obj.rxPath ? 'rx' : (obj.shmPath ? 'tx' : 'tx');\n  if (typeof obj.shmPath === 'string') obj.shmPath = obj.shmPath.replace('/SM_BDC6_BDC6_', '/SM_BDC6_').replace(/\\.bin$/,'');\n  if (typeof obj.rxPath  === 'string') obj.rxPath  = obj.rxPath .replace('/SM_BDC6_BDC6_', '/SM_BDC6_').replace(/\\.bin$/,'');\n  const sig = quickSig(stat, txt);\n  const prev = cache[fn];\n  const changed = !prev || prev.sig !== sig;\n  if (force || changed) {             // <-- neu: force erlaubt Voll-Register\n    cache[fn] = { sig, canId: obj.canId, name: obj.name };\n    toRegister.push({ payload: obj });\n  }\n  seen.add(fn);\n}\nif (doReconcile) {\n  const store = global.get('bdc6Store');\n  if (store && store.messages) {\n    for (const fn of Object.keys(cache)) {\n      if (!seen.has(fn)) {\n        const meta = cache[fn];\n        // drop by name/canId\n        for (const [id, m] of Object.entries(store.messages)) {\n          if ((m.name === meta.name) || (m.canId === meta.canId)) delete store.messages[id];\n        }\n        delete cache[fn];\n      }\n    }\n    global.set('bdc6Store', store);\n  }\n}\ncontext.set('fileCache', cache);\nnode.status({fill: toRegister.length ? 'green':'blue', shape: toRegister.length ? 'dot':'ring', text: toRegister.length ? ('Register '+toRegister.length) : 'keine Änderungen'});\nreturn [ toRegister, [ { payload: { dir, files: files.length, registering: toRegister.length } } ] ];\n",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 160,
+        "wires": [
+            [
+                "36da16f2fd3e20c1"
+            ],
+            [
+                "dbg2"
+            ]
+        ]
+    },
+    {
+        "id": "dbg2",
+        "type": "debug",
+        "z": "tab_reg2",
+        "name": "Loader Diagnose",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "f9b033dd9d7dad4d",
+        "type": "inject",
+        "z": "tab_reg2",
+        "name": "Force Register",
+        "props": [
+            {
+                "p": "mode",
+                "v": "scan",
+                "vt": "str"
+            },
+            {
+                "p": "force",
+                "v": "true",
+                "vt": "bool"
+            },
+            {
+                "p": "reconcile",
+                "v": "true",
+                "vt": "bool"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 200,
+        "y": 120,
+        "wires": [
+            [
+                "fn_loader2"
+            ]
+        ]
+    },
+    {
+        "id": "36da16f2fd3e20c1",
+        "type": "function",
+        "z": "tab_reg2",
+        "name": "BDC6 Register Message",
+        "func": "// BDC6 Register Message — STRICT RESET on every register\n// msg.payload = { name, canId, dir?, shmPath?, rxPath?, signals?, preserveRuntime? }\n\nconst store = global.get('bdc6Store');\nconst def = msg.payload || {};\nif (!store) { node.error(\"bdc6Store not initialised\"); return null; }\nif (!def.name || typeof def.canId !== 'number') { node.error(\"name + canId required\"); return null; }\n\nfunction normDir(d, def) {\n  if (d === 'tx' || d === 'rx') return d;\n  if (def && typeof def.rxPath === 'string') return 'rx';\n  if (def && typeof def.shmPath === 'string') return 'tx';\n  return 'tx';\n}\nfunction fixPath(p) {\n  if (typeof p !== 'string') return null;\n  return p.replace('/SM_BDC6_BDC6_', '/SM_BDC6_').replace(/\\.bin$/,'');\n}\n\n// Direction & paths\nconst dir = normDir(def.dir, def);\nconst shmPath = dir === 'tx' ? (fixPath(def.shmPath) || `/dev/shm/SM_BDC6_${def.name}`) : null;\nconst rxPath  = dir === 'rx' ? (fixPath(def.rxPath)  || `/dev/shm/SM_BDC6_${def.name}`) : null;\n\n// Optional bench override (default false)\nconst preserve = !!def.preserveRuntime && process.env.NODE_ENV === 'development';\n\n// Build fresh runtime, or preserve only if explicitly allowed\nconst prev = store.messages[def.canId];\nconst freshTx = {\n  intervalMs: 0,\n  cyclic: 0,\n  immediate: 0,\n  raw: Buffer.alloc(8, 0),\n  lastWriteTs: 0\n};\nconst freshRx = {\n  rxRaw: Buffer.alloc(8, 0),\n  lastRxTs: 0,\n  lastRxValues: {},\n  _lastSent: null\n};\n\nconst txRuntime = preserve && prev ? {\n  intervalMs: typeof prev.intervalMs === 'number' ? prev.intervalMs : 0,\n  cyclic:     typeof prev.cyclic     === 'number' ? prev.cyclic     : 0,\n  immediate:  0, // even if preserved, immediate must be cleared\n  raw:        (prev.raw instanceof Buffer && prev.raw.length===8) ? prev.raw : Buffer.alloc(8,0),\n  lastWriteTs: 0\n} : freshTx;\n\nconst rxRuntime = preserve && prev ? {\n  rxRaw:      (prev.rxRaw instanceof Buffer && prev.rxRaw.length===8) ? prev.rxRaw : Buffer.alloc(8,0),\n  lastRxTs:   0,\n  lastRxValues: {},\n  _lastSent:  null\n} : freshRx;\n\n// Signals (definition only)\nconst signals = {};\nfor (const [k, s] of Object.entries(def.signals || {})) {\n  signals[k] = {\n    start:  s.start|0,\n    length: s.length|0,\n    factor: (s.factor ?? 1),\n    offset: (s.offset ?? 0),\n    signed: !!s.signed,\n    endian: (s.endian || s.byte_order || 'intel'),\n    unit:   s.unit\n  };\n}\n\n// Final message object (strict overwrite)\nconst m = {\n  name: def.name,\n  canId: def.canId >>> 0,\n  dir,\n  shmPath,\n  rxPath,\n  signals,\n  // runtime (strict)\n  ...txRuntime,\n  ...rxRuntime,\n  lastError: null\n};\n\n// If this name exists on another CAN-ID, remove old to avoid duplicates\nfor (const [id, mm] of Object.entries(store.messages)) {\n  if (mm && mm.name === m.name && Number(id) !== m.canId) {\n    delete store.messages[id];\n  }\n}\n\n// Commit\nstore.messages[m.canId] = m;\nnode.status({ fill: prev ? \"green\":\"green\", shape: prev ? \"dot\":\"dot\", text: `${prev?'re-registered':'registered'} ${m.name} (${m.dir})` });\nreturn { payload: { ok:true, name:m.name, canId:m.canId, dir:m.dir } };\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 970,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "inj_0000",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_APPL_CALIB_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_APPL_CALIB_IDENT\", \"canId\": 467271682, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_APPL_CALIB_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Calib_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Calib_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Calib_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Calib_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Calib_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 100,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0001",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_APPL_CONFIG_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_APPL_CONFIG_IDENT\", \"canId\": 467271683, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_APPL_CONFIG_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Config_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Config_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Config_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Config_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Config_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 150,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0002",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_APPL_FPGA_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_APPL_FPGA_IDENT\", \"canId\": 467271685, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_APPL_FPGA_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Fpga_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fpga_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fpga_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fpga_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fpga_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0003",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_APPL_PARAM_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_APPL_PARAM_IDENT\", \"canId\": 467271684, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_APPL_PARAM_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Param_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Param_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Param_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Param_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Param_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 250,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0004",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_APPL_SWFW_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_APPL_SWFW_IDENT\", \"canId\": 467271681, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_APPL_SWFW_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Appl_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Appl_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Appl_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Appl_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Appl_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 300,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0005",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_CrashEvent",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_CrashEvent\", \"canId\": 889, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_CrashEvent\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Crash_Event\": {\"start\": 16, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Crash_CRC\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Crash_AliveCounter\": {\"start\": 8, \"length\": 4, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 350,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0006",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_DBG_RX",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_DBG_RX\", \"canId\": 1073, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_DBG_RX\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_DBG_RX\": {\"start\": 0, \"length\": 64, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 190,
+        "y": 400,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0007",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_DBG_TX",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_DBG_TX\", \"canId\": 1081, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_DBG_TX\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_DBG_TX\": {\"start\": 0, \"length\": 64, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 450,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0008",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_Diag_Req",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_Diag_Req\", \"canId\": 467271921, \"dir\": \"tx\", \"shmPath\": \"/dev/shm/SM_BDC6_BDC6_Diag_Req\", \"rxPath\": null, \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"ISOx_BDC6_Req_Data\": {\"start\": 0, \"length\": 64, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 500,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0009",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_Diag_Resp",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_Diag_Resp\", \"canId\": 467333376, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_Diag_Resp\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"ISOx_BDC6_Resp_Data\": {\"start\": 0, \"length\": 64, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 550,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0010",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_Errors_Warnings",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_Errors_Warnings\",\"canId\":800,\"dir\":\"rx\",\"shmPath\":null,\"rxPath\":\"/dev/shm/SM_BDC6_BDC6_Errors_Warnings\",\"intervalMs\":0,\"cyclic\":false,\"immediate\":false,\"signals\":{\"BDC6_Warning_xx_Generic\":{\"start\":56,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_07_CAN\":{\"start\":38,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_06_T30_OoR\":{\"start\":37,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_05_ULS\":{\"start\":36,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_04_UHS\":{\"start\":35,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_03_OTP_int\":{\"start\":34,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Warning_02_OTP_ext\":{\"start\":33,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_xx_ILS\":{\"start\":14,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_xx_IHS\":{\"start\":15,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_xx_Generic\":{\"start\":24,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_15_Init\":{\"start\":16,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_14_T15\":{\"start\":13,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_13_ILoop\":{\"start\":12,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_12_Sensors\":{\"start\":11,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_11_ControlU\":{\"start\":10,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_10_LVPS\":{\"start\":9,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_09_ActDisch\":{\"start\":8,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_08_OTP\":{\"start\":7,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_07_CAN\":{\"start\":6,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_06_Emergency\":{\"start\":5,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_05_T30_OoR\":{\"start\":4,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_04_UHS_ULS\":{\"start\":3,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_03_UHS\":{\"start\":2,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_02_ULS\":{\"start\":1,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_Error_01_Request\":{\"start\":0,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 600,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0011",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_FBL_IDENT",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_FBL_IDENT\", \"canId\": 467271680, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_FBL_IDENT\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Ident_Fbl_Test\": {\"start\": 24, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fbl_Rev\": {\"start\": 32, \"length\": 32, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fbl_Mid\": {\"start\": 8, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fbl_Lo\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Ident_Fbl_Hi\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 650,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0012",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_HS_Actual",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_HS_Actual\",\"canId\":849,\"dir\":\"rx\",\"shmPath\":null,\"rxPath\":\"/dev/shm/SM_BDC6_BDC6_HS_Actual\",\"intervalMs\":0,\"cyclic\":false,\"immediate\":false,\"signals\":{\"BDC6_UHS_Actual\":{\"start\":32,\"length\":16,\"factor\":0.03125,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":\"V\"},\"BDC6_IHS_Actual\":{\"start\":16,\"length\":16,\"factor\":0.03125,\"offset\":-1024,\"signed\":false,\"endian\":\"intel\",\"unit\":\"A\"},\"BDC6_HS_CRC\":{\"start\":0,\"length\":8,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_HS_AliveCounter\":{\"start\":8,\"length\":4,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_FuSaWarning_HS_UVP\":{\"start\":50,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_FuSaError_OTP\":{\"start\":52,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_FuSaError_HVIL\":{\"start\":51,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_FuSaError_HS_OVP\":{\"start\":49,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null},\"BDC6_FuSaError_HS_OCP\":{\"start\":48,\"length\":1,\"factor\":1,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":null}}}",
+        "payloadType": "json",
+        "x": 570,
+        "y": 640,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0013",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_HS_Value_Limits",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_HS_Value_Limits\",\"canId\":824,\"dir\":\"tx\",\"shmPath\":null,\"rxPath\":\"/dev/shm/SM_BDC6_BDC6_HS_Value_Limits\",\"intervalMs\":0,\"cyclic\":false,\"immediate\":false,\"signals\":{\"BDC6_UHS_Minimum\":{\"start\":48,\"length\":16,\"factor\":0.03125,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":\"V\"},\"BDC6_UHS_Maximum\":{\"start\":32,\"length\":16,\"factor\":0.03125,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":\"V\"},\"BDC6_IHS_Minimum\":{\"start\":16,\"length\":16,\"factor\":0.03125,\"offset\":-1024,\"signed\":false,\"endian\":\"intel\",\"unit\":\"A\"},\"BDC6_IHS_Maximum\":{\"start\":0,\"length\":16,\"factor\":0.03125,\"offset\":-1024,\"signed\":false,\"endian\":\"intel\",\"unit\":\"A\"}}}",
+        "payloadType": "json",
+        "x": 590,
+        "y": 680,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0014",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_IMD_Actual",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_IMD_Actual\", \"canId\": 912, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_IMD_Actual\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Rinsulation\": {\"start\": 0, \"length\": 16, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"kOhm\"}, \"BDC6_IMD_Status\": {\"start\": 16, \"length\": 2, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_No_New_Estimated\": {\"start\": 22, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_High_Uncertainty\": {\"start\": 21, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_Hardware_Error\": {\"start\": 23, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_CRC\": {\"start\": 56, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_AliveCounter\": {\"start\": 48, \"length\": 4, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 560,
+        "y": 580,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0015",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_LS_Actual",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_LS_Actual\", \"canId\": 865, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_LS_Actual\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_ULS_Actual\": {\"start\": 32, \"length\": 16, \"factor\": 0.03125, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"V\"}, \"BDC6_LS_CRC\": {\"start\": 0, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_LS_AliveCounter\": {\"start\": 8, \"length\": 4, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_ILS_Actual\": {\"start\": 16, \"length\": 16, \"factor\": 0.03125, \"offset\": -1024.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"A\"}, \"BDC6_FuSaError_LS_OVP\": {\"start\": 49, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_FuSaError_LS_OCP\": {\"start\": 48, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 650,
+        "y": 720,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0016",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_LS_Value_Limits",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_LS_Value_Limits\",\"canId\":840,\"dir\":\"tx\",\"shmPath\":null,\"rxPath\":\"/dev/shm/SM_BDC6_BDC6_LS_Value_Limits\",\"intervalMs\":0,\"cyclic\":false,\"immediate\":false,\"signals\":{\"BDC6_ULS_Minimum\":{\"start\":48,\"length\":16,\"factor\":0.03125,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":\"V\"},\"BDC6_ULS_Maximum\":{\"start\":32,\"length\":16,\"factor\":0.03125,\"offset\":0,\"signed\":false,\"endian\":\"intel\",\"unit\":\"V\"},\"BDC6_ILS_Minimum\":{\"start\":16,\"length\":16,\"factor\":0.03125,\"offset\":-1024,\"signed\":false,\"endian\":\"intel\",\"unit\":\"A\"},\"BDC6_ILS_Maximum\":{\"start\":0,\"length\":16,\"factor\":0.03125,\"offset\":-1024,\"signed\":false,\"endian\":\"intel\",\"unit\":\"A\"}}}",
+        "payloadType": "json",
+        "x": 670,
+        "y": 760,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0017",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_State_Actual",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_State_Actual\", \"canId\": 784, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_State_Actual\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Warning_Actual\": {\"start\": 17, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_U_Derating\": {\"start\": 18, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_T_Derating\": {\"start\": 19, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_State_Actual\": {\"start\": 0, \"length\": 4, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_ULS_min\": {\"start\": 10, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_ULS_max\": {\"start\": 11, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_UHS_min\": {\"start\": 14, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_UHS_max\": {\"start\": 15, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_ILS_min\": {\"start\": 8, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_ILS_max\": {\"start\": 9, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_IHS_min\": {\"start\": 12, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_limiter_IHS_max\": {\"start\": 13, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Error_Actual\": {\"start\": 16, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Control_Mode_Actual\": {\"start\": 4, \"length\": 3, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Capability_Actual\": {\"start\": 32, \"length\": 16, \"factor\": 0.03125, \"offset\": -1024.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"A\"}}}",
+        "payloadType": "json",
+        "x": 500,
+        "y": 40,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0018",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_State_Request",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_State_Request\", \"canId\": 776, \"dir\": \"tx\", \"shmPath\": \"/dev/shm/SM_BDC6_BDC6_State_Request\", \"rxPath\": null, \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Zmeas_Request\": {\"start\": 9, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Zmeas_F_Request\": {\"start\": 32, \"length\": 14, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"Hz\"}, \"BDC6_Zmeas_A_Request\": {\"start\": 48, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"A\"}, \"BDC6_Value_Request\": {\"start\": 16, \"length\": 16, \"factor\": 0.03125, \"offset\": -1024.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"V or A\"}, \"BDC6_State_Request\": {\"start\": 0, \"length\": 4, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_IMD_Request\": {\"start\": 8, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Control_Mode_Request\": {\"start\": 4, \"length\": 3, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_ClrError_Request\": {\"start\": 7, \"length\": 1, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 510,
+        "y": 80,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "inj_0019",
+        "type": "inject",
+        "z": "bdc6_reg_tab",
+        "name": "Register BDC6_Zmeas",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "onceDelay": "0.2",
+        "topic": "",
+        "payload": "{\"name\": \"BDC6_Zmeas\", \"canId\": 896, \"dir\": \"rx\", \"shmPath\": null, \"rxPath\": \"/dev/shm/SM_BDC6_BDC6_Zmeas\", \"intervalMs\": 0, \"cyclic\": false, \"immediate\": false, \"signals\": {\"BDC6_Zmeas_Status\": {\"start\": 14, \"length\": 2, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Zmeas_Frequency\": {\"start\": 0, \"length\": 14, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"Hz\"}, \"BDC6_Zmeas_Amplitude\": {\"start\": 16, \"length\": 8, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": \"A\"}, \"BDC6_Z_Real\": {\"start\": 48, \"length\": 16, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}, \"BDC6_Z_Imaginary\": {\"start\": 32, \"length\": 16, \"factor\": 1.0, \"offset\": 0.0, \"signed\": false, \"endian\": \"intel\", \"unit\": null}}}",
+        "payloadType": "json",
+        "x": 560,
+        "y": 520,
+        "wires": [
+            [
+                "7befe8af0743504f"
+            ]
+        ]
+    },
+    {
+        "id": "7befe8af0743504f",
+        "type": "function",
+        "z": "bdc6_reg_tab",
+        "name": "BDC6 Register Message",
+        "func": "// BDC6 Register Message — STRICT RESET on every register\n// msg.payload = { name, canId, dir?, shmPath?, rxPath?, signals?, preserveRuntime? }\n\nconst store = global.get('bdc6Store');\nconst def = msg.payload || {};\nif (!store) { node.error(\"bdc6Store not initialised\"); return null; }\nif (!def.name || typeof def.canId !== 'number') { node.error(\"name + canId required\"); return null; }\n\nfunction normDir(d, def) {\n  if (d === 'tx' || d === 'rx') return d;\n  if (def && typeof def.rxPath === 'string') return 'rx';\n  if (def && typeof def.shmPath === 'string') return 'tx';\n  return 'tx';\n}\nfunction fixPath(p) {\n  if (typeof p !== 'string') return null;\n  return p.replace('/SM_BDC6_BDC6_', '/SM_BDC6_').replace(/\\.bin$/,'');\n}\n\n// Direction & paths\nconst dir = normDir(def.dir, def);\nconst shmPath = dir === 'tx' ? (fixPath(def.shmPath) || `/dev/shm/SM_BDC6_${def.name}`) : null;\nconst rxPath  = dir === 'rx' ? (fixPath(def.rxPath)  || `/dev/shm/SM_BDC6_${def.name}`) : null;\n\n// Optional bench override (default false)\nconst preserve = !!def.preserveRuntime && process.env.NODE_ENV === 'development';\n\n// Build fresh runtime, or preserve only if explicitly allowed\nconst prev = store.messages[def.canId];\nconst freshTx = {\n  intervalMs: 0,\n  cyclic: 0,\n  immediate: 0,\n  raw: Buffer.alloc(8, 0),\n  lastWriteTs: 0\n};\nconst freshRx = {\n  rxRaw: Buffer.alloc(8, 0),\n  lastRxTs: 0,\n  lastRxValues: {},\n  _lastSent: null\n};\n\nconst txRuntime = preserve && prev ? {\n  intervalMs: typeof prev.intervalMs === 'number' ? prev.intervalMs : 0,\n  cyclic:     typeof prev.cyclic     === 'number' ? prev.cyclic     : 0,\n  immediate:  0, // even if preserved, immediate must be cleared\n  raw:        (prev.raw instanceof Buffer && prev.raw.length===8) ? prev.raw : Buffer.alloc(8,0),\n  lastWriteTs: 0\n} : freshTx;\n\nconst rxRuntime = preserve && prev ? {\n  rxRaw:      (prev.rxRaw instanceof Buffer && prev.rxRaw.length===8) ? prev.rxRaw : Buffer.alloc(8,0),\n  lastRxTs:   0,\n  lastRxValues: {},\n  _lastSent:  null\n} : freshRx;\n\n// Signals (definition only)\nconst signals = {};\nfor (const [k, s] of Object.entries(def.signals || {})) {\n  signals[k] = {\n    start:  s.start|0,\n    length: s.length|0,\n    factor: (s.factor ?? 1),\n    offset: (s.offset ?? 0),\n    signed: !!s.signed,\n    endian: (s.endian || s.byte_order || 'intel'),\n    unit:   s.unit\n  };\n}\n\n// Final message object (strict overwrite)\nconst m = {\n  name: def.name,\n  canId: def.canId >>> 0,\n  dir,\n  shmPath,\n  rxPath,\n  signals,\n  // runtime (strict)\n  ...txRuntime,\n  ...rxRuntime,\n  lastError: null\n};\n\n// If this name exists on another CAN-ID, remove old to avoid duplicates\nfor (const [id, mm] of Object.entries(store.messages)) {\n  if (mm && mm.name === m.name && Number(id) !== m.canId) {\n    delete store.messages[id];\n  }\n}\n\n// Commit\nstore.messages[m.canId] = m;\nnode.status({ fill: prev ? \"green\":\"green\", shape: prev ? \"dot\":\"dot\", text: `${prev?'re-registered':'registered'} ${m.name} (${m.dir})` });\nreturn { payload: { ok:true, name:m.name, canId:m.canId, dir:m.dir } };\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 950,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "af68b28e87d23e07",
+        "type": "revpi-single-input",
+        "z": "219e920113492577",
+        "server": "8321136a8ccdcc6b",
+        "inputpin": "AnalogInput_1",
+        "topic": "Throttle Setting",
+        "x": 170,
+        "y": 180,
+        "wires": [
+            [
+                "d8dbad511f0ded6a"
+            ]
+        ]
+    },
+    {
+        "id": "d9be5607b0b4bcf2",
+        "type": "debug",
+        "z": "219e920113492577",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "52a60f7bad9e70b3",
+        "type": "debug",
+        "z": "219e920113492577",
+        "name": "CAN Msgs",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "d8dbad511f0ded6a",
+        "type": "function",
+        "z": "219e920113492577",
+        "name": "Normalisation",
+        "func": "var m = msg.payload;\nvar max = 2000;\nvar min = 350;\nvar range = max - min;\nmsg.payload = (100 / range) * (m - min); // normalisation\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 180,
+        "wires": [
+            [
+                "825b4008bbeb2916",
+                "d9be5607b0b4bcf2"
+            ]
+        ]
+    },
+    {
+        "id": "825b4008bbeb2916",
+        "type": "ui_gauge",
+        "z": "219e920113492577",
+        "name": "Throttle",
+        "group": "aadccb4e29fe4390",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "donut",
+        "title": "Power Setting",
+        "label": "%",
+        "format": "{{value | number:2}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 680,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "d1c1cd00a9c88d99",
+        "type": "socketcan-out",
+        "z": "219e920113492577",
+        "name": "socketcan-out",
+        "config": "b2855d5b.1215c8",
+        "x": 310,
+        "y": 400,
+        "wires": [
+            [
+                "52a60f7bad9e70b3"
+            ]
+        ]
+    },
+    {
+        "id": "b09d4f66c7f7d934",
+        "type": "inject",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "Poll every 1000 ms",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.2",
+        "topic": "",
+        "x": 160,
+        "y": 100,
+        "wires": [
+            [
+                "5de92ab2bbfa4ce9"
+            ]
+        ]
+    },
+    {
+        "id": "5de92ab2bbfa4ce9",
+        "type": "function",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "BDC6 SHM Reader (RX poller)",
+        "func": "// BDC6 SHM Reader (RX poller) — DIAGNOSTIC VERSION (2 outputs)\n// Output #1: array of {payload:{canId,name,raw}} to decoder\n// Output #2: one summary object with counters & notes (wire to a Debug)\n\nconst fs = global.get('fs');\nconst store = global.get('bdc6Store');\nconst outFrames = [];\nconst notes = [];\n\nif (!fs) {\n  node.status({fill:\"red\",shape:\"dot\",text:\"global fs missing\"});\n  return [[], [{error:\"global fs not available. Add functionGlobalContext:{fs:require('fs')}\"}]];\n}\nif (!store || !store.messages || Object.keys(store.messages).length === 0) {\n  node.status({fill:\"yellow\",shape:\"ring\",text:\"no messages registered\"});\n  return [[], [{info:\"No messages in store.messages. Register messages first.\"}]];\n}\n\nconst ctx = context;\nlet coldStart = ctx.get('coldStart');\nif (coldStart === undefined) coldStart = true;\n\nlet total=0, withPath=0, filesRead=0, emitted=0, unchanged=0, short=0, missing=0;\n\nfor (const m of Object.values(store.messages)) {\n  total++;\n\n  const path = m.rxPath || m.shmPath;\n  if (!path) { notes.push({name:m.name, canId:m.canId, skip:\"no rxPath/shmPath\"}); continue; }\n  withPath++;\n\n  // ensure buffers exist\n  if (!m.rxRaw || !(m.rxRaw instanceof Buffer) || m.rxRaw.length !== 8) m.rxRaw = Buffer.alloc(8,0);\n  if (!m._lastSent || !(m._lastSent instanceof Buffer) || m._lastSent.length !== 8) m._lastSent = null;\n\n  // read file\n  let fd, buf = Buffer.alloc(16, 0);\n  try {\n    fd = fs.openSync(path, 'r');\n    const n = fs.readSync(fd, buf, 0, 16, 0);\n    fs.closeSync(fd);\n    if (n < 8) { short++; notes.push({name:m.name, canId:m.canId, path, skip:\"short read\", n}); continue; }\n  } catch (e) {\n    try { if (fd) fs.closeSync(fd); } catch(_) {}\n    missing++; notes.push({name:m.name, canId:m.canId, path, skip:\"open/read failed\"}); continue;\n  }\n\n  filesRead++;\n\n  const raw8 = buf.subarray(0,8);\n  // Always update current snapshot\n  m.rxRaw.set(raw8);\n  m.lastRxTs = Date.now();\n\n  const changed = !m._lastSent || !raw8.equals(m._lastSent);\n  if (coldStart || changed) {\n    m._lastSent = Buffer.from(raw8);\n    outFrames.push({ payload: { canId: m.canId, name: m.name, raw: Buffer.from(raw8) } });\n    emitted++;\n  } else {\n    unchanged++;\n  }\n}\n\n// turn off cold-start after first pass\nif (coldStart) ctx.set('coldStart', false);\n\nconst summary = { total, withPath, filesRead, emitted, unchanged, short, missing, coldStart };\nif (emitted>0) node.status({fill:\"green\",shape:\"dot\",text:`emitted ${emitted} (read ${filesRead})`});\nelse if (filesRead>0) node.status({fill:\"blue\",shape:\"ring\",text:`read ${filesRead}, no change`});\nelse node.status({fill:\"yellow\",shape:\"ring\",text:\"no files read\"});\n\nsummary.notes = notes.slice(0,10); // keep it brief\nreturn [outFrames, [ { payload: summary } ]];\n",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 220,
+        "wires": [
+            [
+                "b43631f2ce8d9b44"
+            ],
+            [
+                "433d13daa549ba25"
+            ]
+        ]
+    },
+    {
+        "id": "b43631f2ce8d9b44",
+        "type": "function",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "BDC6 State Decoder (RX → phys)",
+        "func": "const store = global.get('bdc6Store');\nif (!store) { node.error(\"bdc6Store not initialised\"); return null; }\n\nfunction readSignal(raw, cfg){\n  const bits = cfg.length|0;\n  const signed = !!cfg.signed;\n  const endian = cfg.endian || 'intel';\n  let V;\n  if (endian === 'intel') {\n    let cur = 0n;\n    for (let i=0;i<8;i++) cur |= BigInt(raw[i]) << BigInt(8*i);\n    const shift = BigInt(cfg.start|0);\n    const mask  = ((1n<<BigInt(bits))-1n);\n    V = (cur >> shift) & mask;\n  } else {\n    let be = 0n;\n    for (let i=0;i<8;i++) be = (be<<8n) | BigInt(raw[i]);\n    const start = cfg.start|0;\n    const shift = BigInt(63 - start - (bits - 1));\n    const mask  = ((1n<<BigInt(bits))-1n);\n    V = (be >> shift) & mask;\n  }\n  if (signed) {\n    const signBit = 1n << BigInt(bits - 1);\n    if (V & signBit) {\n      const mod = 1n << BigInt(bits);\n      V = V - mod;\n    }\n  }\n  const factor = (cfg.factor ?? 1);\n  const offset = (cfg.offset ?? 0);\n  return Number(V) * factor + offset;\n}\n\nconst p = msg.payload || {};\nconst m = store.messages[p.canId] || (p.name ? Object.values(store.messages).find(x=>x.name===p.name) : null);\nif (!m) return null;\n\nconst raw = p.raw && p.raw.length===8 ? p.raw : m.rxRaw;\nconst values = {};\nfor (const [name, cfg] of Object.entries(m.signals || {})) {\n  try { values[name] = readSignal(raw, cfg); }\n  catch(e){ node.warn(`decode ${m.name}.${name}: ${e}`); }\n}\nm.lastRxValues = values;\nmsg.payload = { canId:m.canId, name:m.name, values, ts: m.lastRxTs };\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 140,
+        "wires": [
+            [
+                "c71e52b2aa4e73c5"
+            ]
+        ]
+    },
+    {
+        "id": "c71e52b2aa4e73c5",
+        "type": "debug",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "Decoded RX values",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "90531ebc417b8cc0",
+        "type": "inject",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 150,
+        "y": 380,
+        "wires": [
+            [
+                "95a8c2fe6e6ecd2e"
+            ]
+        ]
+    },
+    {
+        "id": "95a8c2fe6e6ecd2e",
+        "type": "function",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "Store inspect (quick)",
+        "func": "// BDC6 Store Inspect (quick)\nconst s = global.get('bdc6Store');\nmsg.payload = !s ? {exists:false}\n  : { exists:true,\n      keys:Object.keys(s),\n      hasMessages: !!s.messages,\n      count: s.messages ? Object.keys(s.messages).length : 0,\n      sample: s.messages ? Object.values(s.messages).slice(0,3).map(m=>({name:m.name, canId:m.canId, dir:m.dir})) : [] };\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 380,
+        "wires": [
+            [
+                "2e783f59d625faf6"
+            ]
+        ]
+    },
+    {
+        "id": "2e783f59d625faf6",
+        "type": "debug",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "433d13daa549ba25",
+        "type": "debug",
+        "z": "7f9c7b72a0bbbc0e",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "476f3f04a9a1a39a",
+        "type": "inject",
+        "z": "bb363cbb77b434e0",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 130,
+        "y": 80,
+        "wires": [
+            [
+                "02241dad6d2cde8b"
+            ]
+        ]
+    },
+    {
+        "id": "7796d186f2570f03",
+        "type": "function",
+        "z": "bb363cbb77b434e0",
+        "name": "Restbus TX (can1)",
+        "func": "// Restbus TX (can1) — robust payload for node-red-contrib-socketcan\n// Sends frames for messages the RevPi should RECEIVE (dir:\"rx\").\n// Byte0 = counter that increments every trigger.\n\nconst store = global.get('bdc6Store');\nif (!store?.messages) return null;\n\n// persistent counter\nlet cnt = context.get('cnt') || 0;\ncnt = (cnt + 1) & 0xFF;\ncontext.set('cnt', cnt);\n\n// choose which messages to send\nconst enabled = msg.enabled && Array.isArray(msg.enabled) && msg.enabled.length\n  ? msg.enabled\n  : [\"BDC6_LS_Actual\",\"BDC6_HS_Actual\",\"BDC6_State_Actual\"];  // edit as needed\n\nconst outMsgs = [];\nfor (const m of Object.values(store.messages)) {\n  if (m.dir !== \"rx\") continue;                 // RevPi should receive these\n  if (!enabled.includes(m.name)) continue;\n\n  const isExt = (m.canId > 0x7FF);              // 29-bit if needed\n  const dataArray = [cnt,0,0,0,0,0,0,0];        // the visible counter in byte 0\n\n  // IMPORTANT: Many socketcan nodes prefer array + dlc over Buffer\n  outMsgs.push({\n    payload: {\n      id: m.canId,\n      ext: isExt,\n      rtr: false,\n      dlc: 8,\n      data: dataArray        // array of 0..255\n      // dataBuf: Buffer.from(dataArray)  // optional, if your node accepts Buffer\n    }\n  });\n}\n\n// emit a debug heartbeat alongside (2nd output) so you can SEE the counter\nreturn [ outMsgs, [{ payload: { tick: cnt, count: outMsgs.length } }] ];\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "06b1cd0a35fcbf1b",
+        "type": "socketcan-in",
+        "z": "bb363cbb77b434e0",
+        "name": "socketcan-in",
+        "config": "b2855d5b.1215c8",
+        "x": 670,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "0ad2c1a607f0dd8d",
+        "type": "socketcan-out",
+        "z": "bb363cbb77b434e0",
+        "name": "socketcan-out",
+        "config": "2beb9fcc09c89f1b",
+        "x": 150,
+        "y": 220,
+        "wires": [
+            [
+                "e64a24df6b6939ea"
+            ]
+        ]
+    },
+    {
+        "id": "e64a24df6b6939ea",
+        "type": "function",
+        "z": "bb363cbb77b434e0",
+        "name": "CAN→SHM (RX)",
+        "func": "const fs = global.get('fs');\nconst store = global.get('bdc6Store');\nif (!fs || !store?.messages) return null;\n\nconst f = msg.payload || {};\nconst id = (typeof f.id === 'number') ? f.id : (msg.canId|0);\nconst data = Buffer.isBuffer(f.data) ? f.data : Buffer.alloc(0);\nconst m = store.messages[id];\nif (!m || m.dir !== 'rx' || !m.rxPath) return null;\n\nconst out = Buffer.alloc(16,0); data.copy(out,0,0,Math.min(8,data.length));\nlet fd; try { fd = fs.openSync(m.rxPath, 'w'); fs.writeSync(fd, out, 0, 16, 0); }\nfinally { try { if (fd) fs.closeSync(fd); } catch(e){} }\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "02241dad6d2cde8b",
+        "type": "function",
+        "z": "bb363cbb77b434e0",
+        "name": "Can1 out Test Data",
+        "func": "const store = global.get('bdc6Store');\nif (!store?.messages) return null;\n\nlet cnt = (context.get('cnt') || 0) + 1; cnt &= 0xFF;\ncontext.set('cnt', cnt);\n\nconst frames = [];\nfor (const m of Object.values(store.messages)) {\n  if (m.dir !== 'rx') continue;                  // simulate BDC6 → RevPi\n  frames.push({\n    payload: {\n      canfd: false,\n      ext:   (m.canId > 0x7FF),\n      rtr:   false,\n      canid: m.canId,                            // decimal\n      dlc:   8,\n      data:  [cnt,0,cnt,0,cnt,0,cnt,0]\n    }\n  });\n}\nreturn frames;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 140,
+        "wires": [
+            [
+                "06b1cd0a35fcbf1b"
+            ]
+        ]
+    },
+    {
+        "id": "7b24a62e.8f5458",
+        "type": "debug",
+        "z": "bb363cbb77b434e0",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 370,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "a64240cb.3f0788",
+        "type": "inject",
+        "z": "bb363cbb77b434e0",
+        "name": "Send object - std",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ext\":false,\"canid\":123,\"dlc\":5,\"data\":[1,2,3,4,5]}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 360,
+        "wires": [
+            [
+                "caba412f.047b2"
+            ]
+        ]
+    },
+    {
+        "id": "3ff96369.ef6f5c",
+        "type": "inject",
+        "z": "bb363cbb77b434e0",
+        "name": "Send string - std",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "123#00112233",
+        "payloadType": "str",
+        "x": 180,
+        "y": 440,
+        "wires": [
+            [
+                "caba412f.047b2"
+            ]
+        ]
+    },
+    {
+        "id": "6879c00a.5edb68",
+        "type": "inject",
+        "z": "bb363cbb77b434e0",
+        "name": "Send string - ext",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1F334455#1122334455667788",
+        "payloadType": "str",
+        "x": 180,
+        "y": 480,
+        "wires": [
+            [
+                "caba412f.047b2"
+            ]
+        ]
+    },
+    {
+        "id": "1ee3b274.4cb8fe",
+        "type": "inject",
+        "z": "bb363cbb77b434e0",
+        "name": "Send object - ext",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"ext\":true,\"canid\":32278,\"dlc\":5,\"data\":[1,2,3,4,5]}",
+        "payloadType": "json",
+        "x": 180,
+        "y": 400,
+        "wires": [
+            [
+                "caba412f.047b2"
+            ]
+        ]
+    },
+    {
+        "id": "391a4c45.7acd8c",
+        "type": "comment",
+        "z": "bb363cbb77b434e0",
+        "name": "Send CAN frames in using different payloads on VCAN0",
+        "info": "",
+        "x": 280,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "912f9928.da2758",
+        "type": "comment",
+        "z": "bb363cbb77b434e0",
+        "name": "Receive CAN data from interface VCAN0",
+        "info": "",
+        "x": 240,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "caba412f.047b2",
+        "type": "socketcan-in",
+        "z": "bb363cbb77b434e0",
+        "name": "socketcan-out",
+        "config": "b2855d5b.1215c8",
+        "x": 380,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "5f671b29.cd24bc",
+        "type": "socketcan-out",
+        "z": "bb363cbb77b434e0",
+        "name": "socketcan-out",
+        "config": "b2855d5b.1215c8",
+        "x": 170,
+        "y": 600,
+        "wires": [
+            [
+                "7b24a62e.8f5458"
+            ]
+        ]
+    },
+    {
+        "id": "3ccd8893fe6a33fb",
+        "type": "function",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6 SHM Writer",
+        "func": "// BDC6 SHM Writer (filesystem-safe: no function references in context)\n// msg.payload = { canId: 0x338 }  OR  [0x201, 0x338]  OR omitted → write all\n\nconst store = global.get('bdc6Store');\nif (!store) { node.error(\"Store not initialised\"); return null; }\n\nconst fs = global.get('fs'); // from settings.js functionGlobalContext\nif (!fs) { node.error(\"global fs not available; set functionGlobalContext:{fs:require('fs')}\"); return null; }\n\nfunction writeShm16(shmPath, canId, raw, intervalMs, cyclic, immediate) {\n  // Build 16-byte buffer: uint64 raw | uint32 can_id | uint16 interval_ms | uint8 cyclic | uint8 immediate\n  const buf = Buffer.alloc(16, 0);\n\n  // pack raw (little-endian uint64 assembled from raw[0..7])\n  let u64 = 0n;\n  for (let i = 0; i < 8; i++) u64 |= BigInt(raw[i] & 0xFF) << BigInt(8 * i);\n  for (let i = 0; i < 8; i++) buf[i] = Number((u64 >> BigInt(8 * i)) & 0xFFn);\n\n  buf.writeUInt32LE((canId >>> 0), 8);\n  buf.writeUInt16LE((intervalMs | 0) & 0xFFFF, 12);\n  buf.writeUInt8(cyclic ? 1 : 0, 14);\n  buf.writeUInt8(immediate ? 1 : 0, 15);\n\n  // in-place write (create if missing)\n  let fd;\n  try {\n    try {\n      fd = fs.openSync(shmPath, 'r+');\n    } catch (e) {\n      fd = fs.openSync(shmPath, 'w+');\n      fs.ftruncateSync(fd, 16);\n    }\n    fs.writeSync(fd, buf, 0, 16, 0);\n    fs.closeSync(fd);\n    return null; // no error\n  } catch (err) {\n    try { if (fd) fs.closeSync(fd); } catch (_) {}\n    return String(err);\n  }\n}\n\nfunction writeOne(m) {\n  const err = writeShm16(m.shmPath, m.canId, m.raw, m.intervalMs, m.cyclic, m.immediate);\n  m.lastWriteTs = Date.now();\n  m.lastError = err;\n  return { canId: m.canId, name: m.name, shmPath: m.shmPath, err };\n}\n\nlet out = [];\nif (Array.isArray(msg.payload)) {\n  for (const id of msg.payload) {\n    const m = store.messages[id];\n    if (m) out.push(writeOne(m));\n  }\n} else if (msg.payload && typeof msg.payload.canId === 'number') {\n  const m = store.messages[msg.payload.canId];\n  if (m) out.push(writeOne(m));\n} else {\n  for (const id of Object.keys(store.messages)) {\n    const m = store.messages[id];\n    out.push(writeOne(m));\n  }\n}\n\nnode.status({ fill: \"green\", shape: \"dot\", text: `Wrote ${out.length} msg(s)` });\nreturn { payload: out };\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 220,
+        "wires": [
+            [
+                "b34dae5a0a0c4728"
+            ]
+        ]
+    },
+    {
+        "id": "08a3d0fa1812561b",
+        "type": "function",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6 Register Message",
+        "func": "// BDC6 Register Message\n// msg.payload = {\n//   name: \"BDC6_HS_Value_Limits\",\n//   canId: 0x338,\n//   intervalMs: 0, cyclic: 0, immediate: 0,\n//   shmPath: \"/dev/shm/SM_BDC6_HS_Value_Limits\",\n//   signals: {\n//     // example signals (adjust to your DBC)\n//     // \"HS_Max_Power\": {start:0, length:16, factor:0.1, offset:0, signed:false, endian:\"intel\"},\n//   }\n// }\n\nconst STORE_KEY = 'bdc6Store';\nconst store = global.get(STORE_KEY);\nif (!store) { node.error(\"Store not initialised\"); return null; }\n\nconst def = msg.payload;\nif (!def || typeof def.canId !== \"number\" || !def.name) {\n  node.error(\"Invalid message definition\"); return null;\n}\n\nstore.messages[def.canId] = {\n  name: def.name,\n  canId: def.canId>>>0,\n  intervalMs: def.intervalMs|0,\n  cyclic: def.cyclic?1:0,\n  immediate: def.immediate?1:0,\n  raw: Buffer.alloc(8,0),\n  signals: def.signals||{},\n  shmPath: def.shmPath || `/dev/shm/SM_${def.name}`,\n  rxPath:  def.rxPath || null,\n  rxRaw:   Buffer.alloc(8, 0),\n  lastRxTs: 0,\n  lastWriteTs: 0,\n  lastError: null\n};\n\nnode.status({fill:\"green\",shape:\"dot\",text:`Registered ${def.name} (0x${def.canId.toString(16)})`});\nreturn {payload: {ok:true, canId:def.canId, name:def.name}};\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 100,
+        "wires": [
+            [
+                "9cf37858636ef91f"
+            ]
+        ]
+    },
+    {
+        "id": "2d06229cf47a4676",
+        "type": "inject",
+        "z": "tab-bdc6-pilot",
+        "name": "Register message",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_HS_Value_Limits\",\"canId\":824,\"intervalMs\":100,\"cyclic\":false,\"immediate\":false,\"shmPath\":\"/dev/shm/SM_BDC6_HS_Value_Limits\",\"signals\":{\"HS_Max_Power\":{\"start\":0,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Min_Power\":{\"start\":16,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Max_Current\":{\"start\":32,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Min_Current\":{\"start\":48,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"}}}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 100,
+        "wires": [
+            [
+                "08a3d0fa1812561b"
+            ]
+        ]
+    },
+    {
+        "id": "9cf37858636ef91f",
+        "type": "debug",
+        "z": "tab-bdc6-pilot",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "2f4cce7f7f5abc36",
+        "type": "function",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6 Write Signals",
+        "func": "// BDC6 Write Signals (with robust coercion)\n// msg.payload = { canId, values:{...}, intervalMs?, cyclic?, immediate? }\n\nconst store = global.get('bdc6Store');\nif (!store) { node.error(\"Store not initialised\"); return null; }\n\nconst p = msg.payload || {};\nconst m = store.messages[p.canId];\nif (!m){ node.error(`Message 0x${(p.canId||0).toString(16)} not registered`); return null; }\n\n// --- helpers ---\nfunction asBool(x){\n  if (typeof x === 'boolean') return x;\n  if (typeof x === 'number') return x !== 0;\n  if (typeof x === 'string') return /^(1|true|on|yes)$/i.test(x.trim());\n  return false;\n}\nfunction asU16(x){\n  const n = Number(x);\n  if (!Number.isFinite(n) || n < 0) return 0;\n  return Math.min(0xFFFF, Math.round(n));\n}\n// ---------------\n\n// timing/flags (update even if strings/numbers)\nif (p.hasOwnProperty('intervalMs')) m.intervalMs = asU16(p.intervalMs);\nif (p.hasOwnProperty('cyclic'))     m.cyclic    = asBool(p.cyclic) ? 1 : 0;\nif (p.hasOwnProperty('immediate'))  m.immediate = asBool(p.immediate) ? 1 : 0;\n\n// pack signals\nfunction writeSignal(raw, cfg, physValue){\n  const valPhys = Number(physValue);\n  const factor = (cfg.factor ?? 1);\n  const offset = (cfg.offset ?? 0);\n  const bits   = cfg.length | 0;\n  const signed = !!cfg.signed;\n  const endian = (cfg.endian || 'intel');\n\n  let v = Math.round((valPhys - offset) / factor);\n  let V = BigInt(v);\n\n  const maxU = (bits === 64) ? (BigInt(-1)) : ((1n<<BigInt(bits)) - 1n);\n  if (signed) {\n    const signLim = 1n << BigInt(bits - 1), mod = 1n << BigInt(bits);\n    if (V < -signLim || V >= signLim) throw new Error(`Value ${v} exceeds signed ${bits}b`);\n    if (V < 0n) V = mod + V;\n  } else {\n    if (V < 0n || V > maxU) throw new Error(`Value ${v} out of 0..${Number(maxU)}`);\n  }\n\n  if (endian === 'intel') {\n    let cur = 0n;\n    for (let i=0;i<8;i++) cur |= BigInt(raw[i]) << BigInt(8*i);\n    const shift = BigInt(cfg.start|0);\n    const mask  = ~(((1n<<BigInt(bits))-1n) << shift);\n    cur = (cur & mask) | (V << shift);\n    for (let i=0;i<8;i++) raw[i] = Number((cur >> BigInt(8*i)) & 0xFFn);\n  } else {\n    let be = 0n;\n    for (let i=0;i<8;i++) be = (be<<8n) | BigInt(raw[i]);\n    const start = cfg.start|0;\n    const shift = BigInt(63 - start - (bits - 1));\n    const mask  = ~(((1n<<BigInt(bits))-1n) << shift);\n    be = (be & mask) | (V << shift);\n    for (let i=7;i>=0;i--){ raw[i] = Number(be & 0xFFn); be >>= 8n; }\n  }\n}\n\nconst vals = p.values || {};\nfor (const [sigName, phys] of Object.entries(vals)){\n  const cfg = m.signals[sigName];\n  if (!cfg) { node.warn(`Signal ${sigName} not defined for ${m.name}`); continue; }\n  try { writeSignal(m.raw, cfg, phys); }\n  catch(e){ m.lastError = String(e); node.error(`Pack error ${m.name}.${sigName}: ${e}`); }\n}\n\nreturn { payload:{ ok:true, canId:m.canId, name:m.name, raw: Buffer.from(m.raw).toString('hex'), flags:{intervalMs:m.intervalMs, cyclic:m.cyclic, immediate:m.immediate} } };\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 220,
+        "wires": [
+            [
+                "3ccd8893fe6a33fb"
+            ]
+        ]
+    },
+    {
+        "id": "7319700cc83c177b",
+        "type": "inject",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6_HS_Value_Limits",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"name\":\"BDC6_HS_Value_Limits\",\"canId\":824,\"intervalMs\":100,\"cyclic\":true,\"immediate\":false,\"shmPath\":\"/dev/shm/SM_BDC6_HS_Value_Limits\",\"signals\":{\"HS_Max_Power\":{\"start\":0,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Min_Power\":{\"start\":16,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Max_Current\":{\"start\":32,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"},\"HS_Min_Current\":{\"start\":48,\"length\":16,\"factor\":0.1,\"offset\":0,\"signed\":false,\"endian\":\"intel\"}}}",
+        "payloadType": "json",
+        "x": 170,
+        "y": 160,
+        "wires": [
+            [
+                "2f4cce7f7f5abc36"
+            ]
+        ]
+    },
+    {
+        "id": "b34dae5a0a0c4728",
+        "type": "debug",
+        "z": "tab-bdc6-pilot",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 810,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "729d9fbf8f9eee61",
+        "type": "function",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6 State Request",
+        "func": "// Inject -> BDC6 Register Message\nmsg.payload = {\n  name: \"BDC6_State_Request\",\n  canId: 0x201,\n  intervalMs: 0, cyclic: false, immediate: false,\n  shmPath: \"/dev/shm/SM_BDC6_State_Request\",\n  signals: {\n    \"Request_State\": {start:0, length:8, factor:1, offset:0, signed:false, endian:\"intel\"},\n    \"Request_Flags\": {start:8, length:8, factor:1, offset:0, signed:false, endian:\"intel\"}\n  }\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 320,
+        "wires": [
+            [
+                "08a4f218a4da11fe"
+            ]
+        ]
+    },
+    {
+        "id": "3ae9fddb5db8a201",
+        "type": "function",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6 Write State Request Message",
+        "func": "// Inject -> BDC6 Write Signals -> BDC6 SHM Writer\nmsg.payload = {\n  canId: 0x201,\n  values: { Request_State: 3, Request_Flags: 0 },\n  intervalMs: 0,\n  cyclic: false,\n  immediate: true   // backend should transmit immediately once\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 320,
+        "wires": [
+            [
+                "729d9fbf8f9eee61"
+            ]
+        ]
+    },
+    {
+        "id": "6de88f2c6ab79d4c",
+        "type": "inject",
+        "z": "tab-bdc6-pilot",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 90,
+        "y": 320,
+        "wires": [
+            [
+                "3ae9fddb5db8a201"
+            ]
+        ]
+    },
+    {
+        "id": "08a4f218a4da11fe",
+        "type": "debug",
+        "z": "tab-bdc6-pilot",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 810,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "eee2ccea1921cb6f",
+        "type": "debug",
+        "z": "tab-bdc6-pilot",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "1798004f9e5ea9a8",
+        "type": "BDC6_State_Request_BDC6_Value_Request",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6_State_Request:BDC6_Value_Request",
+        "message_name": "BDC6_State_Request",
+        "signal_name": "BDC6_Value_Request",
+        "can_id_hex": "0x308",
+        "start_bit": 16,
+        "bit_length": 16,
+        "factor": "0.03125",
+        "offset": "-1024",
+        "unit": "V or A",
+        "byte_order": "intel",
+        "signed": 0,
+        "min": "-1024",
+        "max": "1023.96875",
+        "default": "0",
+        "category": "BDC6_State_Request",
+        "x": 490,
+        "y": 420,
+        "wires": [
+            [
+                "eee2ccea1921cb6f"
+            ]
+        ]
+    },
+    {
+        "id": "e886be0fda8d9262",
+        "type": "inject",
+        "z": "tab-bdc6-pilot",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 170,
+        "y": 420,
+        "wires": [
+            [
+                "1798004f9e5ea9a8"
+            ]
+        ]
+    },
+    {
+        "id": "0f4189ae875c7b01",
+        "type": "BDC6_HS_Value_Limits_BDC6_UHS_Maximum",
+        "z": "tab-bdc6-pilot",
+        "name": "BDC6_HS_Value_Limits:BDC6_UHS_Maximum",
+        "message_name": "BDC6_HS_Value_Limits",
+        "signal_name": "BDC6_UHS_Maximum",
+        "can_id_hex": "0x338",
+        "start_bit": 32,
+        "bit_length": 16,
+        "factor": "0.03125",
+        "offset": "0",
+        "unit": "V",
+        "byte_order": "intel",
+        "signed": 0,
+        "min": "0",
+        "max": "2047.96875",
+        "default": "0",
+        "category": "BDC6_HS",
+        "x": 500,
+        "y": 680,
+        "wires": [
+            [
+                "6c1462f3aa6cb8dd"
+            ]
+        ]
+    },
+    {
+        "id": "3e79cc48a2b9a8f4",
+        "type": "inject",
+        "z": "tab-bdc6-pilot",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1",
+        "payloadType": "num",
+        "x": 210,
+        "y": 680,
+        "wires": [
+            [
+                "0f4189ae875c7b01"
+            ]
+        ]
+    },
+    {
+        "id": "6c1462f3aa6cb8dd",
+        "type": "debug",
+        "z": "tab-bdc6-pilot",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 660,
+        "wires": []
+    }
+]

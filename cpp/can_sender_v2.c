@@ -197,13 +197,13 @@ static int reopen_can_bound(const char* ifname){
 
 // ---- Messages-Tabelle ----
 static entry_t E[] = {
-    { .shm_name="/SM_BDC6_State_Request",    .req_name="/SM_BDC6_State_Request.req_nr",
+	{ .shm_name="/SM_TX_BDC6_State_Request",   .req_name="/SM_TX_BDC6_State_Request.req",
       .fd_state=-1, .fd_req=-1, .state=NULL, .req=NULL, .next_send_ns=0 },
 
-    { .shm_name="/SM_BDC6_HS_Value_Limits",  .req_name="/SM_BDC6_HS_Value_Limits.req_nr",
+	{ .shm_name="/SM_TX_BDC6_HS_Value_Limits", .req_name="/SM_TX_BDC6_HS_Value_Limits.req",
       .fd_state=-1, .fd_req=-1, .state=NULL, .req=NULL, .next_send_ns=0 },
 
-    { .shm_name="/SM_BDC6_LS_Value_Limits",  .req_name="/SM_BDC6_LS_Value_Limits.req_nr",
+	{ .shm_name="/SM_TX_BDC6_LS_Value_Limits", .req_name="/SM_TX_BDC6_LS_Value_Limits.req",
       .fd_state=-1, .fd_req=-1, .state=NULL, .req=NULL, .next_send_ns=0 },
 };
 static const size_t N = sizeof(E)/sizeof(E[0]);
@@ -322,7 +322,8 @@ int main(int argc, char** argv){
                     f.can_dlc = 8;
                     memcpy(f.data, s.data, 8);
                     if (write(can, &f, sizeof f) < 0 && g_log_debug) perror("write(can, immediate)");
-                    E[i].state->immediate = 0;
+                    // Do NOT write back into TX files; Node-RED clears 'immediate' itself.
+                    // E[i].state->immediate = 0;
                 }
             }
             now = mono_ns();

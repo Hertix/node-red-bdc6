@@ -1,1 +1,42 @@
-<!-- nodes/BDC6_LS_Value_Limits_BDC6_ULS_Minimum.html --><script type='text/javascript'>RED.nodes.registerType('BDC6_LS_Value_Limits_BDC6_ULS_Minimum',{category:'BDC6_LS',color:'#ddeeff',defaults:{name:{value:'BDC6_LS_Value_Limits:BDC6_ULS_Minimum'},message_name:{value:'BDC6_LS_Value_Limits'},signal_name:{value:'BDC6_ULS_Minimum'},can_id_hex:{value:'0x348'},start_bit:{value:48},bit_length:{value:16},factor:{value:'0.03125'},offset:{value:'0'},unit:{value:'V'},byte_order:{value:'intel'},signed:{value:0},min:{value:'0'},max:{value:'2047.96875'},'default':{value:'0'},category:{value:'BDC6_LS'}},inputs:1,outputs:1,icon:'font-awesome/fa-sliders',paletteLabel:'BDC6_ULS_Minimum',label:function(){return this.name||'BDC6_LS_Value_Limits:BDC6_ULS_Minimum';}});</script>
+<!-- nodes/bdc6-bdc6-ls-value-limits-bdc6-uls-minimum.html -->
+<script type="text/javascript">
+RED.nodes.registerType('bdc6-bdc6-ls-value-limits-bdc6-uls-minimum', {
+  category: 'BDC6',
+  color: '#c4e1ff',
+  defaults: { name: { value: '' } },
+  inputs: 1,
+  outputs: 1,
+  icon: 'font-awesome/fa-sliders',
+  label: function () { return this.name || 'BDC6_ULS_Minimum (BDC6_LS_Value_Limits)'; },
+  paletteLabel: 'BDC6_ULS_Minimum',
+  inputLabels: 'Number | { value, interval_ms?, cyclic?, immediate? }',
+  outputLabels: 'BDC6_SIGNAL_UPDATE'
+});
+</script>
+
+<script type="text/html" data-template-name="bdc6-bdc6-ls-value-limits-bdc6-uls-minimum">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="BDC6_ULS_Minimum (BDC6_LS_Value_Limits)">
+  </div>
+  <div class="form-tips">
+    <b>Message:</b> BDC6_LS_Value_Limits &nbsp;
+    <b>Signal:</b> BDC6_ULS_Minimum &nbsp; <b>Unit:</b> V
+    <br/>Input a number (physical) or an object like
+    <code>{ value: 120, interval_ms: 10, cyclic: true, immediate: true }</code>.
+    The SHM Writer handles scaling and bit-packing.
+  </div>
+</script>
+
+<script type="text/html" data-help-name="bdc6-bdc6-ls-value-limits-bdc6-uls-minimum">
+  <p>Emits a <code>BDC6_SIGNAL_UPDATE</code> payload for <code>BDC6_LS_Value_Limits.BDC6_ULS_Minimum</code>,
+     including CAN id and packing info. If a value is provided it is forwarded as
+     <code>value_phys</code> (physical). The SHM Writer converts to raw and writes SHM.</p>
+  <p>Accepted inputs:
+    <ul>
+      <li><code>msg.payload = Number</code> (physical)</li>
+      <li><code>msg.payload = { value, interval_ms?, cyclic?, immediate? }</code></li>
+      <li><code>msg.signal_value</code> (physical), <code>msg.value_bits</code> (raw)</li>
+    </ul>
+  </p>
+</script>

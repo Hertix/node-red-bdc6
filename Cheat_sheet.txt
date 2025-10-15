@@ -1,0 +1,15 @@
+sudo systemctl stop nodered
+
+sudo -u nodered npm --prefix /var/lib/revpi-nodered/.node-red \
+  install /home/pi/development/node-red-contrib-bdc6-signal-nodes \
+  --no-audit --no-fund --no-update-notifier
+
+sudo systemctl start nodered
+
+
+Two important caveats:
+
+Only mapped messages are active. 
+Right now the C table contains 3 entries. 
+To control ~20 messages, you (or I) must add them to the E[] array and rebuild the service — otherwise 
+writes to unmapped names won’t be seen.
